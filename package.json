@@ -1,0 +1,26 @@
+{
+  "name": "backlate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trucdongtxtv/backlate.git"
+  },
+  "keywords": [
+    "backlate"
+  ],
+  "author": "trucdongtxtv",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trucdongtxtv/backlate/issues"
+  },
+  "homepage": "https://github.com/trucdongtxtv/backlate#readme",
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "mysql": "^2.18.1"
+  }
+}
