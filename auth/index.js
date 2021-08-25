@@ -4,22 +4,37 @@ const authenticate = (username, password) => {
   };
 };
 
-module.exports = (app) => {
-  app.get("/auth", (req, res) => {
+module.exports = (app, session) => {
+  app.post("/auth/login", (req, res) => {
     const username = req.query.username;
     const password = req.query.password;
+    session = req.session;
+    session.username = username;
+    console.log(session);
 
     if (username && password) {
       res.json({
-        status: 200,
         username: username,
-        ...authenticate(username, password)
+        ...authenticate(username, password),
       });
     } else {
       res.json({
-        status: 400,
         message: "Missing input!",
       });
     }
+  });
+
+  app.post("/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        res.json({
+          message: "Cannot logout",
+        });
+        return;
+      }
+    });
+    res.json({
+      message: "Logout",
+    });
   });
 };
