@@ -1,23 +1,14 @@
 const express = require('express');
 const app = express();
   
-// Defining get request at '/' route
 app.get('/', (req, res) => {
   res.json({
     number: 1
   });
 });
-  
-// Defining get request at '/multiple' route
-app.get('/multiple', (req, res) => {
-  res.json({
-    number: 1,
-    name: 'John',
-    gender: 'male'
-  });
-});
-  
-// Defining get request at '/array' route
+
+require('./auth')(app)
+
 app.get('/array', (req, res) => {
   res.json([{
       number: 1,
