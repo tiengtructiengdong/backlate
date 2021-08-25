@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/trucdongtxtv/backlate#readme",
   "dependencies": {
+    "express": "^4.17.1",
     "http": "^0.0.1-security",
     "mysql": "^2.18.1"
   }
