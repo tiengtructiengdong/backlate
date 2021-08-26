@@ -2,30 +2,13 @@ const express = require("express");
 const session = require("express-session");
 const app = express();
 
-app.use(session({ secret: "ssshhhhh", saveUninitialized: true, resave: true }));
+var mysql = require("mysql");
 
-app.get("/", (req, res) => {
-  res.json({
-    number: 1,
-  });
-});
-
-require("./auth")(app, session);
-
-app.get("/array", (req, res) => {
-  res.json([
-    {
-      number: 1,
-      name: "John",
-      gender: "male",
-    },
-    {
-      number: 2,
-      name: "Ashley",
-      gender: "female",
-    },
-  ]);
-});
+app.use(
+  session({ secret: "smh9812cdmbpm", saveUninitialized: true, resave: true })
+);
+require("./auth")(app, session, mysql);
+require("./db")(mysql);
 
 // Setting the server to listen at port 3000
 app.listen(8000, (req, res) => {

@@ -4,7 +4,7 @@ const authenticate = (username, password) => {
   };
 };
 
-module.exports = (app, session) => {
+module.exports = (app, session, mysql) => {
   app.post("/auth/login", (req, res) => {
     const username = req.query.username;
     const password = req.query.password;
