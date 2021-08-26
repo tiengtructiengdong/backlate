@@ -4,11 +4,11 @@ const authenticate = (username, password) => {
   };
 };
 
-module.exports = (app, session, mysql) => {
+module.exports = (app, session, con) => {
   app.post("/auth/login", (req, res) => {
-    const username = req.query.username;
-    const password = req.query.password;
+    const { username, password } = req.query;
     session = req.session;
+
     session.username = username;
     console.log(session);
 
@@ -35,6 +35,34 @@ module.exports = (app, session, mysql) => {
     });
     res.json({
       message: "Logout",
+    });
+  });
+
+  app.post("/auth/register", (req, res) => {
+    const { name, userId, username, email, password } = req.query;
+    var id;
+    var error;
+
+    const query = `INSERT INTO User(Name, UserId, Username, Email, Password) 
+                    VALUES('${name}', '${userId}', '${username}', '${email}', '${password}')`;
+
+    con.query(query, (err, res) => {
+      if (err) {
+        console.log(err.sqlMessage);
+        return;
+      }
+      console.log("New user is added\n", res);
+      newId = res.insertId;
+    });
+    if (error) {
+      console.log(error);
+    }
+    res.json({
+      id: id,
+      name: name,
+      userId: userId,
+      username: username,
+      email: email,
     });
   });
 };
