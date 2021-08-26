@@ -52,7 +52,7 @@ module.exports = (app, session, con) => {
         return;
       }
       console.log("New user is added\n", res);
-      newId = res.insertId;
+      id = res.insertId;
     });
     if (error) {
       console.log(error);
