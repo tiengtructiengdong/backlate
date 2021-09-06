@@ -6,7 +6,7 @@ const authenticate = (username, password) => {
 
 module.exports = (app, session, con) => {
   app.post("/auth/login", (req, res) => {
-    const { username, password } = req.query;
+    const { username, password } = req.body;
     session = req.session;
 
     session.username = username;
@@ -39,7 +39,7 @@ module.exports = (app, session, con) => {
   });
 
   app.post("/auth/register", (req, res) => {
-    const { name, userId, username, email, password } = req.query;
+    const { name, userId, username, email, password } = req.body;
     var id;
     var error;
 

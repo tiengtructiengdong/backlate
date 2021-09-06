@@ -10,6 +10,8 @@ var connect = mysql.createConnection({
   database: "applate",
 });
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   session({ secret: "smh9812cdmbpm", saveUninitialized: true, resave: true })
 );
