@@ -2,6 +2,8 @@ const express = require("express");
 const session = require("express-session");
 const app = express();
 
+const PORT = 8000;
+
 var mysql = require("mysql");
 var connect = mysql.createConnection({
   host: "localhost",
@@ -18,7 +20,6 @@ app.use(
 require("./auth")(app, session, connect);
 require("./db")(connect);
 
-// Setting the server to listen at port 3000
-app.listen(8000, (req, res) => {
-  console.log("Server is running at port 8000");
+app.listen(PORT, (req, res) => {
+  console.log(`Server is running at port ${PORT}`);
 });

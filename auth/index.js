@@ -1,27 +1,50 @@
+var jwt = require("jsonwebtoken");
+
 const authenticate = (username, password) => {
+  var token = jwt.sign({ foo: username }, password);
+  console.log(token);
   return {
-    token: "1fe5482djep23o1210saxecswm",
+    token: token,
   };
 };
 
 module.exports = (app, session, con) => {
   app.post("/auth/login", (req, res) => {
-    const { username, password } = req.body;
-    session = req.session;
-
-    session.username = username;
-    console.log(session);
-
-    if (username && password) {
+    if (session.user) {
       res.json({
-        username: username,
-        ...authenticate(username, password),
-      });
-    } else {
-      res.json({
-        message: "Missing input!",
+        message: "Already logged in",
       });
     }
+    const { username, password } = req.body;
+
+    const query = `SELECT * FROM User WHERE Username = '${username}' AND Password = '${password}'`;
+
+    con.query(query, (err, userData) => {
+      if (err) {
+        console.log(err.sqlMessage);
+        return;
+      }
+      if (username && password) {
+        if (userData.length >= 1) {
+          // proceed login
+
+          session = req.session;
+          session.username = username;
+          res.json({
+            username: username,
+            ...authenticate(username, password),
+          });
+        } else {
+          res.status(401).json({
+            message: "Invalid username or password",
+          });
+        }
+      } else {
+        res.status(400).json({
+          message: "Missing input!",
+        });
+      }
+    });
   });
 
   app.post("/auth/logout", (req, res) => {
@@ -46,12 +69,12 @@ module.exports = (app, session, con) => {
     const query = `INSERT INTO User(Name, UserId, Username, Email, Password) 
                     VALUES('${name}', '${userId}', '${username}', '${email}', '${password}')`;
 
-    con.query(query, (err, res) => {
+    con.query(query, (err, sqlResult) => {
       if (err) {
         console.log(err.sqlMessage);
         return;
       }
-      console.log("New user is added\n", res);
+      console.log("New user is added\n", sqlResult);
       id = res.insertId;
     });
     if (error) {
