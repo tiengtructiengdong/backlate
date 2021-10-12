@@ -16,14 +16,15 @@ module.exports = (app, con) => {
       if (username && password) {
         if (userData.length >= 1) {
           // if user is found
+          // Log in from other device: update token?
 
-          var json = JSON.parse(JSON.stringify(userData[0]));
+          /*var json = JSON.parse(JSON.stringify(userData[0]));
           if (json.UserToken) {
             res.status(400).json({
               message: "Already logged in",
             });
             return;
-          }
+          }*/
 
           const token = jwt.sign({ foo: username }, password);
 
