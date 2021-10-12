@@ -1,5 +1,4 @@
 const express = require("express");
-const session = require("express-session");
 const app = express();
 
 const PORT = 8000;
@@ -14,10 +13,7 @@ var connect = mysql.createConnection({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  session({ secret: "smh9812cdmbpm", saveUninitialized: true, resave: true })
-);
-require("./auth")(app, session, connect);
+require("./auth")(app, connect);
 require("./db")(connect);
 
 app.listen(PORT, (req, res) => {

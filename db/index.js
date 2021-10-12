@@ -19,8 +19,9 @@ module.exports = (con) => {
         Name varchar(256) NOT NULL,
         UserId varchar(12) UNIQUE,
         Username varchar(16) NOT NULL UNIQUE,
-        Email varchar(256) UNIQUE,
+        PhoneNumber varchar(256) UNIQUE,
         Password varchar(256) NOT NULL,
+        UserToken varchar(256),
         PRIMARY KEY (Id)
       )`,
       (err, res) => {

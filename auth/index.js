@@ -1,73 +1,97 @@
 var jwt = require("jsonwebtoken");
 
-const authenticate = (username, password) => {
-  var token = jwt.sign({ foo: username }, password);
-  console.log(token);
-  return {
-    token: token,
-  };
-};
-
-module.exports = (app, session, con) => {
+module.exports = (app, con) => {
   app.post("/auth/login", (req, res) => {
-    if (session.user) {
-      res.json({
-        message: "Already logged in",
-      });
-    }
     const { username, password } = req.body;
 
     const query = `SELECT * FROM User WHERE Username = '${username}' AND Password = '${password}'`;
 
     con.query(query, (err, userData) => {
       if (err) {
-        console.log(err.sqlMessage);
+        res.status(500).json({
+          message: err.sqlMessage,
+        });
         return;
       }
       if (username && password) {
         if (userData.length >= 1) {
-          // proceed login
+          // if user is found
 
-          session = req.session;
-          session.username = username;
-          res.json({
-            username: username,
-            ...authenticate(username, password),
+          var json = JSON.parse(JSON.stringify(userData[0]));
+          if (json.UserToken) {
+            res.status(400).json({
+              message: "Already logged in",
+            });
+            return;
+          }
+
+          const token = jwt.sign({ foo: username }, password);
+
+          const query = `UPDATE User SET UserToken = '${token}' WHERE Username = '${username}' AND Password = '${password}'`;
+          con.query(query, (err, userData) => {
+            if (err) {
+              res.status(500).json({
+                message: err.sqlMessage,
+              });
+              return;
+            }
+            res.json({
+              username: username,
+              token: token,
+            });
           });
-        } else {
-          res.status(401).json({
-            message: "Invalid username or password",
-          });
+          return;
         }
-      } else {
-        res.status(400).json({
-          message: "Missing input!",
+
+        // if user not found
+        res.status(401).json({
+          message: "Invalid username or password",
         });
+        return;
       }
+      res.status(400).json({
+        message: "Missing input!",
+      });
     });
   });
 
   app.post("/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
+    const { username } = req.body;
+
+    const query = `SELECT * FROM User WHERE Username = '${username}'`;
+
+    con.query(query, (err, userData) => {
       if (err) {
-        res.json({
-          message: "Cannot logout",
+        res.status(500).json({
+          message: err.sqlMessage,
         });
         return;
       }
-    });
-    res.json({
-      message: "Logout",
+      if (username) {
+        const query = `UPDATE User SET UserToken = NULL WHERE Username = '${username}'`;
+        con.query(query, (err, userData) => {
+          if (err) {
+            res.status(500).json({
+              message: err.sqlMessage,
+            });
+            return;
+          }
+          res.json({
+            message: "Logout",
+          });
+          return;
+        });
+      }
     });
   });
 
   app.post("/auth/register", (req, res) => {
-    const { name, userId, username, email, password } = req.body;
+    const { name, userId, username, phoneNumber, password } = req.body;
     var id;
     var error;
 
-    const query = `INSERT INTO User(Name, UserId, Username, Email, Password) 
-                    VALUES('${name}', '${userId}', '${username}', '${email}', '${password}')`;
+    const query = `INSERT INTO User(Name, UserId, Username, PhoneNumber, Password) 
+                    VALUES('${name}', '${userId}', '${username}', '${phoneNumber}', '${password}')`;
 
     con.query(query, (err, sqlResult) => {
       if (err) {
@@ -85,7 +109,7 @@ module.exports = (app, session, con) => {
       name: name,
       userId: userId,
       username: username,
-      email: email,
+      phoneNumber: phoneNumber,
     });
   });
 };
