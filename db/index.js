@@ -1,20 +1,6 @@
-module.exports = (con) => {
-  con.connect((err) => {
-    if (err) throw err;
-    console.log("Connected!");
-
-    con.query("CREATE DATABASE applate", (err, res) => {
-      if (err) {
-        console.log("Database exists!");
-        return;
-      }
-      console.log("Create database successfully\n", res);
-    });
-
-    //con.query("DROP TABLE User", function (err, result) {});
-
-    con.query(
-      `CREATE TABLE User(
+module.exports = (pool) => {
+  pool.query(
+    `CREATE TABLE IF NOT EXISTS User(
         Id int NOT NULL AUTO_INCREMENT,
         Name varchar(256) NOT NULL,
         UserId varchar(12) UNIQUE,
@@ -24,13 +10,12 @@ module.exports = (con) => {
         UserToken varchar(256),
         PRIMARY KEY (Id)
       )`,
-      (err, res) => {
-        if (err) {
-          console.log("Table User exists!");
-          return;
-        }
-        console.log("Create table User successfully\n", res);
+    (err, res) => {
+      if (err) {
+        throw err;
+        return;
       }
-    );
-  });
+      console.log("Create table User successfully\n", res);
+    }
+  );
 };

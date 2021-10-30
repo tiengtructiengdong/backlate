@@ -1,12 +1,12 @@
 var jwt = require("jsonwebtoken");
 
-module.exports = (app, con) => {
+module.exports = (app, pool) => {
   app.post("/auth/login", (req, res) => {
     const { username, password } = req.body;
 
     const query = `SELECT * FROM User WHERE Username = '${username}' AND Password = '${password}'`;
 
-    con.query(query, (err, userData) => {
+    pool.query(query, (err, userData) => {
       if (err) {
         res.status(500).json({
           message: err.sqlMessage,
@@ -29,7 +29,7 @@ module.exports = (app, con) => {
           const token = jwt.sign({ foo: username }, password);
 
           const query = `UPDATE User SET UserToken = '${token}' WHERE Username = '${username}' AND Password = '${password}'`;
-          con.query(query, (err, userData) => {
+          pool.query(query, (err, userData) => {
             if (err) {
               res.status(500).json({
                 message: err.sqlMessage,
@@ -61,7 +61,7 @@ module.exports = (app, con) => {
 
     const query = `SELECT * FROM User WHERE Username = '${username}'`;
 
-    con.query(query, (err, userData) => {
+    pool.query(query, (err, userData) => {
       if (err) {
         res.status(500).json({
           message: err.sqlMessage,
@@ -70,7 +70,7 @@ module.exports = (app, con) => {
       }
       if (username) {
         const query = `UPDATE User SET UserToken = NULL WHERE Username = '${username}'`;
-        con.query(query, (err, userData) => {
+        pool.query(query, (err, userData) => {
           if (err) {
             res.status(500).json({
               message: err.sqlMessage,
@@ -94,7 +94,7 @@ module.exports = (app, con) => {
     const query = `INSERT INTO User(Name, UserId, Username, PhoneNumber, Password) 
                     VALUES('${name}', '${userId}', '${username}', '${phoneNumber}', '${password}')`;
 
-    con.query(query, (err, sqlResult) => {
+    pool.query(query, (err, sqlResult) => {
       if (err) {
         console.log(err.sqlMessage);
         return;
