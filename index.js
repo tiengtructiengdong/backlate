@@ -8,7 +8,11 @@ var mysql = require("mysql");
 const createUnixSocketPool = async () => {
   const dbSocketPath = process.env.DB_SOCKET_PATH || "/cloudsql";
 
-  // Establish a connection to the database
+  // host: "localhost",
+  // user: "root",
+  // password: "",
+  // database: "applate",
+
   return new Promise((resolve, reject) => {
     const con = mysql.createPool({
       connectionLimit: 5,
