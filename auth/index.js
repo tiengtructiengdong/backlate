@@ -95,6 +95,19 @@ module.exports = (app, pool) => {
   app.post("/auth/register", (req, res) => {
     const { id, firstName, lastName, phoneNumber, password } = req.body;
 
+    if (
+      id == "" ||
+      firstName == "" ||
+      lastName == "" ||
+      phoneNumber == "" ||
+      password == ""
+    ) {
+      res.status(400).json({
+        message: "Inputs cannot be blank!",
+      });
+      return;
+    }
+
     const query = `INSERT INTO User(Id, FirstName, LastName, PhoneNumber, Password) 
                     VALUES('${id}', '${firstName}', '${lastName}', '${phoneNumber}', '${password}')`;
 
