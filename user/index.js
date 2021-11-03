@@ -25,7 +25,6 @@ module.exports = (app, pool) => {
       })
       .catch(() => {
         res.status(403).json({ message: "Forbidden" });
-        return;
       });
   });
 };
