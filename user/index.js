@@ -1,27 +1,15 @@
-const verifyToken = require("../auth/verifyToken");
+const verifyRequest = require("../auth/verifyRequest");
 
 module.exports = (app, pool) => {
-  app.get("/user", async (req, res) => {
-    const { searchId, requestId } = req.query;
-    const bearerHeader = req.headers["authorization"];
+  app.get("/user", (req, res) => {
+    const { id } = req.query;
 
-    if (bearerHeader) {
-      const bearer = bearerHeader.split(" ");
-      const bearerToken = bearer[1];
-      req.token = bearerToken;
-    } else {
-      res.status(403).json({ message: "Forbidden" });
-      return;
-    }
-
-    await verifyToken(pool, req.token, requestId)
+    verifyRequest(req, pool)
       .then(() => {
-        const query = `SELECT * FROM User WHERE Id = '${searchId}' LIMIT 1`;
+        const query = `SELECT * FROM User WHERE Id = '${id}' LIMIT 1`;
         pool.query(query, (err, userData) => {
           if (err) {
-            res.status(400).json({
-              message: err,
-            });
+            res.status(400).json({ message: err });
             return;
           }
           var json = JSON.parse(JSON.stringify(userData[0]));
@@ -37,6 +25,7 @@ module.exports = (app, pool) => {
       })
       .catch(() => {
         res.status(403).json({ message: "Forbidden" });
+        return;
       });
   });
 };
