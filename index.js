@@ -36,6 +36,7 @@ createUnixSocketPool().then((pool) => {
   require("./db")(pool);
   require("./auth")(app, pool);
   require("./user")(app, pool);
+  require("./partnership")(app, pool);
   app.listen(PORT, (req, res) => {
     console.log(`Server is running at port ${PORT}`);
   });
