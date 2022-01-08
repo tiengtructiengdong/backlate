@@ -99,24 +99,4 @@ module.exports = (app, pool) => {
         res.status(403).json({ message: "Forbidden" });
       });
   });
-
-  app.get("/user/:id/getWorkingParkingLot", (req, res) => {
-    const { userId } = req.query;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `SELECT * FROM Partnership WHERE UserId = '${userId}'`;
-        pool.query(query, (err, userData) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          var json = userData.map((data) => JSON.parse(JSON.stringify(data)));
-          res.json(json);
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
 };
