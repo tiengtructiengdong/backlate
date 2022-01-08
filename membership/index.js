@@ -1,12 +1,12 @@
 const verifyRequest = require("../auth/verifyRequest");
 
 module.exports = (app, pool) => {
-  app.post(`/parkingLot/:id/updateMembership`, (req, res) => {
-    const { name, spaceCount, address } = req.body;
+  app.post("/user/addParkingLot", (req, res) => {
+    const { userId, name, spaceCount, address } = req.body;
 
     verifyRequest(req, pool)
       .then(() => {
-        const query = `INSERT INTO ParkingLot (Name, SpaceCount, Address) VALUES (${name}, ${spaceCount}, ${address})`;
+        const query = `INSERT INTO ParkingLot (OwnerId, Name, SpaceCount, Address) VALUES (${userId}, ${name}, ${spaceCount}, ${address})`;
         pool.query(query, (err, data) => {
           if (err) {
             res.status(400).json({ message: err });
@@ -23,7 +23,7 @@ module.exports = (app, pool) => {
   });
 
   // WIP
-  app.get(`/parkingLot/:id/getAllMembership`, (req, res) => {
+  app.get(`/parkingLot/:id/getCurrentParking`, (req, res) => {
     const { name, spaceCount, address } = req.body;
 
     verifyRequest(req, pool)
@@ -44,7 +44,7 @@ module.exports = (app, pool) => {
       });
   });
 
-  app.post(`/parkingLot/:id/addMembership`, (req, res) => {
+  app.get(`/parkingLot/:id/getParkingHistory`, (req, res) => {
     const { name, spaceCount, address } = req.body;
 
     verifyRequest(req, pool)
@@ -65,29 +65,7 @@ module.exports = (app, pool) => {
       });
   });
 
-  // price, name, etc.
-  app.post(`/parkingLot/:id/updateMembership`, (req, res) => {
-    const { name, spaceCount, address } = req.body;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (Name, SpaceCount, Address) VALUES (${name}, ${spaceCount}, ${address})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-          });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
-
-  app.post(`/parkingLot/:id/assignMembership`, (req, res) => {
+  app.get(`/parkingLot/:id/getAllCustomers`, (req, res) => {
     const { name, spaceCount, address } = req.body;
 
     verifyRequest(req, pool)

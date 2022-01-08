@@ -1,7 +1,7 @@
 const verifyRequest = require("../auth/verifyRequest");
 
 module.exports = (app, pool) => {
-  app.get("/user", (req, res) => {
+  app.get("/user/:id", (req, res) => {
     const { id } = req.query;
 
     verifyRequest(req, pool)

@@ -5,6 +5,21 @@ const PORT = process.env.PORT || 8080;
 
 var mysql = require("mysql");
 
+// var con = mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "",
+// });
+
+// con.connect(function (err) {
+//   if (err) throw err;
+//   console.log("Connected!");
+//   con.query("CREATE DATABASE applate", function (err, result) {
+//     if (err) throw err;
+//     console.log("Database created");
+//   });
+// });
+
 const createUnixSocketPool = async () => {
   const dbSocketPath = process.env.DB_SOCKET_PATH || "/cloudsql";
 

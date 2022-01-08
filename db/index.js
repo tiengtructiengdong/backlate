@@ -1,15 +1,12 @@
 module.exports = (pool) => {
-  pool.query("DROP TABLE User", function (err, res) {});
-  pool.query("DROP TABLE ParkingLot", function (err, res) {});
-  pool.query("DROP TABLE Partnership", function (err, res) {});
-  pool.query("DROP TABLE Membership", function (err, res) {});
-  pool.query("DROP TABLE Vehicle", function (err, res) {});
+  //pool.query("DROP DATABASE IF EXISTS applate", function (err, res) {});
 
   pool.query(
     `
       CREATE TABLE IF NOT EXISTS 
       User(
-        Id varchar(12) UNIQUE NOT NULL,
+        Id int AUTO_INCREMENT,
+        OfficialId varchar(12) UNIQUE NOT NULL,
         FullName varchar(255) NOT NULL,
         PhoneNumber varchar(255) UNIQUE NOT NULL,
         Password varchar(255) NOT NULL,
@@ -32,7 +29,7 @@ module.exports = (pool) => {
       CREATE TABLE IF NOT EXISTS 
       ParkingLot(
         Id int AUTO_INCREMENT,
-        OwnerId varchar(12) NOT NULL,
+        OwnerId int NOT NULL,
         Name varchar(255) NOT NULL,
         Address varchar(255),
         SpaceCount int(16) DEFAULT 0,
@@ -54,7 +51,7 @@ module.exports = (pool) => {
       CREATE TABLE IF NOT EXISTS 
       Partnership(
         Id int AUTO_INCREMENT,
-        PartnerId varchar(12) NOT NULL,
+        PartnerId int NOT NULL,
         ParkingLotId int NOT NULL,
 
         PRIMARY KEY (Id),
@@ -99,8 +96,7 @@ module.exports = (pool) => {
         PlateId int AUTO_INCREMENT,
         VehicleInfo JSON NOT NULL,
 
-        PRIMARY KEY (PlateId),
-        FOREIGN KEY (ParkingLotId) REFERENCES ParkingLot(Id) ON DELETE CASCADE
+        PRIMARY KEY (PlateId)
       );
       `,
     (err, res) => {

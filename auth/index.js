@@ -4,7 +4,7 @@ module.exports = (app, pool) => {
   app.post("/auth/login", (req, res) => {
     const { number, password } = req.body;
 
-    const query = `SELECT * FROM User WHERE (PhoneNumber = '${number}' OR Id = '${number}') AND Password = '${password}'`;
+    const query = `SELECT * FROM User WHERE (PhoneNumber = '${number}' OR OfficialId = '${number}') AND Password = '${password}'`;
 
     pool.query(query, (err, userData) => {
       if (err) {
@@ -30,7 +30,7 @@ module.exports = (app, pool) => {
           const token = jwt.sign({ foo: number }, password);
 
           const query = `UPDATE User SET UserToken = '${token}' 
-                          WHERE (PhoneNumber = '${number}' OR Id = '${number}') AND Password = '${password}'`;
+                          WHERE (PhoneNumber = '${number}' OR OfficialId = '${number}') AND Password = '${password}'`;
           pool.query(query, (err, userData) => {
             if (err) {
               res.status(500).json({
@@ -40,10 +40,9 @@ module.exports = (app, pool) => {
             }
             res.json({
               id: json.Id,
-              firstName: json.FirstName,
-              lastName: json.LastName,
+              officialId: json.OfficialId,
+              fullName: json.FullName,
               phoneNumber: json.PhoneNumber,
-              isVerified: json.IsVerified,
               token: token,
             });
           });
@@ -52,7 +51,7 @@ module.exports = (app, pool) => {
 
         // if user not found
         res.status(401).json({
-          message: "Invalid username or password",
+          message: "InvalofficialId username or password",
         });
         return;
       }
@@ -63,9 +62,9 @@ module.exports = (app, pool) => {
   });
 
   app.post("/auth/logout", (req, res) => {
-    const { id } = req.body;
+    const { officialId } = req.body;
 
-    const query = `SELECT * FROM User WHERE Id = '${id}'`;
+    const query = `SELECT * FROM User WHERE OfficialId = '${officialId}'`;
 
     pool.query(query, (err, userData) => {
       if (err) {
@@ -75,7 +74,7 @@ module.exports = (app, pool) => {
         return;
       }
       if (phoneNumber) {
-        const query = `UPDATE User SET UserToken = NULL WHERE Id = '${id}'`;
+        const query = `UPDATE User SET UserToken = NULL WHERE OfficialId = '${officialId}'`;
         pool.query(query, (err, userData) => {
           if (err) {
             res.status(500).json({
@@ -93,12 +92,11 @@ module.exports = (app, pool) => {
   });
 
   app.post("/auth/register", (req, res) => {
-    const { id, firstName, lastName, phoneNumber, password } = req.body;
+    const { officialId, fullName, phoneNumber, password } = req.body;
 
     if (
-      id == "" ||
-      firstName == "" ||
-      lastName == "" ||
+      officialId == "" ||
+      fullName == "" ||
       phoneNumber == "" ||
       password == ""
     ) {
@@ -108,8 +106,8 @@ module.exports = (app, pool) => {
       return;
     }
 
-    const query = `INSERT INTO User(Id, FirstName, LastName, PhoneNumber, Password) 
-                    VALUES('${id}', '${firstName}', '${lastName}', '${phoneNumber}', '${password}')`;
+    const query = `INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
+                    VALUES('${officialId}', '${fullName}', '${phoneNumber}', '${password}')`;
 
     pool.query(query, (err, sqlResult) => {
       if (err) {
@@ -120,18 +118,17 @@ module.exports = (app, pool) => {
       }
       console.log("New user is added\n", sqlResult);
       res.json({
-        userId: id,
-        firstName: firstName,
-        lastName: lastName,
+        officialId: officialId,
+        fullName: fullName,
         phoneNumber: phoneNumber,
       });
     });
   });
 
   app.post("/auth/verify", (req, res) => {
-    const { id } = req.body;
+    const { officialId } = req.body;
 
-    const query = `UPDATE User SET IsVerified = 1 WHERE Id = '${id}'`;
+    const query = `UPDATE User SET IsVerified = 1 WHERE OfficialId = '${officialId}'`;
 
     pool.query(query, (err, sqlResult) => {
       if (err) {
@@ -142,7 +139,7 @@ module.exports = (app, pool) => {
       }
       console.log("Verified!\n", sqlResult);
       res.json({
-        id: id,
+        officialId: officialId,
         message: "Verified!",
       });
     });
