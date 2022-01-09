@@ -2,138 +2,139 @@ const verifyRequest = require("../auth/verifyRequest");
 const { promisify } = require("util");
 
 module.exports = (app, pool) => {
-  app.get(`/parkingLot`, (req, res) => {
+  app.get(`/parkingLot`, async (req, res) => {
     const ownerId = req.headers.id;
 
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `
-          SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId}
-        `;
-        pool.query(query, (err, userData) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          var json = userData.map((data) => JSON.parse(JSON.stringify(data)));
-          res.json({ data: json });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+    const query = `
+      SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId}
+    `;
+    pool.query(query, (err, userData) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+      var json = userData.map((data) => JSON.parse(JSON.stringify(data)));
+      res.json({ data: json });
+    });
   });
 
-  app.post("/parkingLot/addParkingLot", (req, res) => {
+  app.post("/parkingLot/addParkingLot", async (req, res) => {
     const { address, name, spaceCount } = req.body;
     const ownerId = req.headers.id;
 
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-            id: data.insertId,
-          });
-        });
-      })
-      .catch((err) => {
-        res.status(403).json({ message: "Forbidden" });
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    const query = `INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
+    pool.query(query, (err, data) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+      res.json({
+        message: "Successful",
+        id: data.insertId,
       });
+    });
   });
 
-  app.get(`/parkingLot/:id`, (req, res) => {
+  app.get(`/parkingLot/:id`, async (req, res) => {
     const { id } = req.params;
     const ownerId = req.headers.id;
 
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `
-          SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId} AND Id = ${id}
-        `;
-        pool.query(query, (err, userData) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          var parkingLotData = userData.map((data) =>
-            JSON.parse(JSON.stringify(data))
-          );
-          const q = `
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    const query = `
+      SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId} AND Id = ${id}
+    `;
+    pool.query(query, (err, userData) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+      var parkingLotData = userData.map((data) =>
+        JSON.parse(JSON.stringify(data))
+      );
+      const q = `
             SELECT * FROM Membership WHERE ParkingLotId = ${id}
           `;
-          pool.query(q, (err, data) => {
-            if (err) {
-              res.status(400).json({ message: err });
-              return;
-            }
-            var membership = data.map((item) =>
-              JSON.parse(JSON.stringify(item))
-            );
-            res.json({ ...parkingLotData, membership });
-          });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
+      pool.query(q, (err, data) => {
+        if (err) {
+          res.status(400).json({ message: err });
+          return;
+        }
+        var membership = data.map((item) => JSON.parse(JSON.stringify(item)));
+        res.json({ ...parkingLotData, membership });
       });
+    });
   });
 
   // cannot set headers?
-  app.put(`/parkingLot/:id/update`, (req, res) => {
+  app.put(`/parkingLot/:id/update`, async (req, res) => {
     const { address, name, spaceCount } = req.body;
     const ownerId = req.headers.id;
     const parkingLotId = req.params.id;
 
-    verifyRequest(req, pool)
-      .then(async () => {
-        var query = `
-          SELECT Id FROM ParkingLot
-          WHERE Id = ${parkingLotId} AND OwnerId = ${ownerId} 
-        `;
-        const asyncQuery = promisify(pool.query).bind(pool);
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
 
-        try {
-          const exe = await asyncQuery(query);
-          console.log(exe);
-          if (exe.length === 0) {
-            res.status(403).json({
-              message:
-                "Forbidden: You do not have permission with this parking lot.",
-            });
-            return;
-          }
-        } catch (err) {
-          res.status(400).json({ message: "Error" });
-          return;
-        }
+    var query = `
+      SELECT Id FROM ParkingLot
+      WHERE Id = ${parkingLotId} AND OwnerId = ${ownerId} 
+    `;
+    const asyncQuery = promisify(pool.query).bind(pool);
 
-        query = `
-          UPDATE ParkingLot 
-          SET 
-            ${address ? `Address = '${address}' ,` : ""} 
-            ${name ? `Name = '${name}' ,` : ""} 
-            ${spaceCount ? `SpaceCount = '${spaceCount}'` : ""}
-          WHERE OwnerId = ${ownerId} AND Id = ${parkingLotId}
-        `;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
+    try {
+      const exe = await asyncQuery(query);
+      console.log(exe);
+      if (exe.length === 0) {
+        res.status(403).json({
+          message:
+            "Forbidden: You do not have permission with this parking lot.",
         });
+        return;
+      }
+    } catch (err) {
+      res.status(400).json({ message: "Error" });
+      return;
+    }
 
-        res.json({
-          message: "Successful",
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
+    query = `
+      UPDATE ParkingLot 
+      SET 
+        ${address ? `Address = '${address}' ,` : ""} 
+        ${name ? `Name = '${name}' ,` : ""} 
+        ${spaceCount ? `SpaceCount = '${spaceCount}'` : ""}
+      WHERE OwnerId = ${ownerId} AND Id = ${parkingLotId}
+    `;
+    pool.query(query, (err, data) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+    });
+
+    res.json({
+      message: "Successful",
+    });
   });
 };
