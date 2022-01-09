@@ -1,12 +1,49 @@
 const verifyRequest = require("../auth/verifyRequest");
+const { promisify } = require("util");
 
 module.exports = (app, pool) => {
-  app.post("/user/addParkingLot", (req, res) => {
-    const { userId, name, spaceCount, address } = req.body;
+  app.post("/parkingLot/:id/addMembership", (req, res) => {
+    const { name, fee, level } = req.body;
+    const parkingLotId = req.params.id;
+    const userId = req.headers.id;
 
     verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (OwnerId, Name, SpaceCount, Address) VALUES (${userId}, ${name}, ${spaceCount}, ${address})`;
+      .then(async () => {
+        /*`
+          SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+          FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+          WHERE (ParkingLot.Id = ${parkingLotId} AND (
+            ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+          ))
+        `; */
+        var query = `
+          SELECT Id FROM ParkingLot
+          WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
+        `;
+        const asyncQuery = promisify(pool.query).bind(pool);
+
+        try {
+          const exe = await asyncQuery(query);
+          console.log(exe);
+          if (exe.length === 0) {
+            res.status(403).json({
+              message:
+                "Forbidden: You do not have permission with this parking lot.",
+            });
+            return;
+          }
+        } catch (err) {
+          res.status(400).json({ message: "Error" });
+          return;
+        }
+
+        //
+        query = `
+          INSERT INTO Membership (ParkingLotId, Name, Fee, Level) 
+          VALUES (${parkingLotId}, '${name}', '${JSON.stringify(
+          fee
+        )}', ${level})
+        `;
         pool.query(query, (err, data) => {
           if (err) {
             res.status(400).json({ message: err });
@@ -14,75 +51,15 @@ module.exports = (app, pool) => {
           }
           res.json({
             message: "Successful",
+            parkingLotId,
+            name,
+            fee,
+            level,
           });
         });
       })
       .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
-
-  // WIP
-  app.get(`/parkingLot/:id/getCurrentParking`, (req, res) => {
-    const { name, spaceCount, address } = req.body;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (Name, SpaceCount, Address) VALUES (${name}, ${spaceCount}, ${address})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-          });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
-
-  app.get(`/parkingLot/:id/getParkingHistory`, (req, res) => {
-    const { name, spaceCount, address } = req.body;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (Name, SpaceCount, Address) VALUES (${name}, ${spaceCount}, ${address})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-          });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
-
-  app.get(`/parkingLot/:id/getAllCustomers`, (req, res) => {
-    const { name, spaceCount, address } = req.body;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (Name, SpaceCount, Address) VALUES (${name}, ${spaceCount}, ${address})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-          });
-        });
-      })
-      .catch(() => {
-        res.status(403).json({ message: "Forbidden" });
+        res.status(403).json({ message: "Forbidden", err });
       });
   });
 };
