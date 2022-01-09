@@ -1,29 +1,6 @@
 const verifyRequest = require("../auth/verifyRequest");
 
 module.exports = (app, pool) => {
-  app.post("/parkingLot/addParkingLot", (req, res) => {
-    const { address, name, spaceCount } = req.body;
-    const ownerId = req.headers.id;
-
-    verifyRequest(req, pool)
-      .then(() => {
-        const query = `INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
-        pool.query(query, (err, data) => {
-          if (err) {
-            res.status(400).json({ message: err });
-            return;
-          }
-          res.json({
-            message: "Successful",
-            id: data.insertId,
-          });
-        });
-      })
-      .catch((err) => {
-        res.status(403).json({ message: "Forbidden" });
-      });
-  });
-
   app.post("/parkingLot/:id/addPartner", (req, res) => {
     const { partnerId } = req.body;
     const parkingLotId = req.params.id;
