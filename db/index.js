@@ -17,10 +17,7 @@ module.exports = (pool) => {
       ); 
       `,
     (err, res) => {
-      if (err) {
-        throw err;
-        return;
-      }
+      if (err) throw err;
       console.log("Create table User successfully\n", res);
     }
   );
@@ -39,10 +36,7 @@ module.exports = (pool) => {
       );
       `,
     (err, res) => {
-      if (err) {
-        throw err;
-        return;
-      }
+      if (err) throw err;
       console.log("Create table ParkingLot successfully\n", res);
     }
   );
@@ -53,6 +47,7 @@ module.exports = (pool) => {
         Id int AUTO_INCREMENT,
         PartnerId int NOT NULL,
         ParkingLotId int NOT NULL,
+        IsConfirmed tinyint(1) DEFAULT 1,
 
         PRIMARY KEY (Id),
         FOREIGN KEY (PartnerId) REFERENCES User(Id) ON DELETE CASCADE,
@@ -60,10 +55,7 @@ module.exports = (pool) => {
       );
       `,
     (err, res) => {
-      if (err) {
-        throw err;
-        return;
-      }
+      if (err) throw err;
       console.log("Create table ParkingLotPartner successfully\n", res);
     }
   );
@@ -77,15 +69,13 @@ module.exports = (pool) => {
         Name varchar(50) NOT NULL,
         Fee JSON NOT NULL,
         Level int NOT NULL,
+
         PRIMARY KEY (Id),
         FOREIGN KEY (ParkingLotId) REFERENCES ParkingLot(Id) ON DELETE CASCADE
       );
       `,
     (err, res) => {
-      if (err) {
-        throw err;
-        return;
-      }
+      if (err) throw err;
       console.log("Create table Fee successfully\n", res);
     }
   );
@@ -93,18 +83,68 @@ module.exports = (pool) => {
     `
       CREATE TABLE IF NOT EXISTS 
       Vehicle(
-        PlateId int AUTO_INCREMENT,
-        VehicleInfo JSON NOT NULL,
+        PlateId string UNIQUE NOT NULL,
+        VehicleInfo JSON,
 
         PRIMARY KEY (PlateId)
       );
       `,
     (err, res) => {
-      if (err) {
-        throw err;
-        return;
-      }
-      console.log("Create table Membership successfully\n", res);
+      if (err) throw err;
+      console.log("Create table Vehicle successfully\n", res);
+    }
+  );
+  pool.query(
+    `
+      CREATE TABLE IF NOT EXISTS 
+      Customer(
+        Id int AUTO_INCREMENT,
+        PlateId string NOT NULL,
+        MembershipId int NOT NULL,
+        ExtraInfo JSON,
+
+        PRIMARY KEY (Id),
+        FOREIGN KEY (MembershipId) REFERENCES Membership(Id) ON DELETE CASCADE
+        FOREIGN KEY (PlateId) REFERENCES Vehicle(Id) ON DELETE CASCADE
+      );
+      `,
+    (err, res) => {
+      if (err) throw err;
+      console.log("Create table Vehicle successfully\n", res);
+    }
+  );
+
+  // PLATE ID?
+  pool.query(
+    `
+      CREATE TABLE IF NOT EXISTS 
+      Session(
+        Id int AUTO_INCREMENT,
+        ParkingLotId int NOT NULL,
+        CustomerId int NOT NULL,
+
+        Code string NOT NULL,
+        CheckinDateTime datetime NOT NULL,
+        CheckoutDateTime datetime,
+
+        PRIMARY KEY (Id),
+        FOREIGN KEY (CustomerId) REFERENCES Customer(Id) ON DELETE CASCADE
+        FOREIGN KEY (ParkingLotId) REFERENCES ParkingLot(Id) ON DELETE CASCADE
+      );
+      `,
+    (err, res) => {
+      if (err) throw err;
+      console.log("Create table Vehicle successfully\n", res);
+    }
+  );
+  pool.query(
+    `
+      CREATE VIEW ActiveSession
+      AS SELECT * FROM Session WHERE CheckoutDateTime IS NULL
+      `,
+    (err, res) => {
+      if (err) throw err;
+      console.log("Create table Vehicle successfully\n", res);
     }
   );
 };

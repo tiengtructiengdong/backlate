@@ -59,4 +59,71 @@ module.exports = (app, pool) => {
       });
     });
   });
+
+  app.put(
+    "/parkingLot/:id/membership/:membershipId/updateMembership",
+    async (req, res) => {
+      const { name, fee, level } = req.body;
+      const { membershipId } = req.params;
+      const parkingLotId = req.params.id;
+      const userId = req.headers.id;
+
+      try {
+        await verifyRequest(req, pool);
+      } catch (err) {
+        res.status(403).json({ message: "Forbidden: Not logged in" });
+        return;
+      }
+
+      var query = `
+        SELECT Id FROM ParkingLot
+        WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
+      `;
+      const asyncQuery = promisify(pool.query).bind(pool);
+
+      try {
+        const exe = await asyncQuery(query);
+        if (exe.length === 0) {
+          res.status(403).json({
+            message:
+              "Forbidden: You do not have permission with this parking lot.",
+          });
+          return;
+        }
+      } catch (err) {
+        res.status(400).json({ message: "Error", err });
+        return;
+      }
+
+      query = `
+      UPDATE Membership
+      SET 
+        ${
+          fee
+            ? `Fee = '${JSON.stringify(fee)}' ${name || level ? "," : ""}`
+            : ""
+        } 
+        ${name ? `Name = '${name}' ${level ? "," : ""}` : ""} 
+        ${level ? `Level = '${level}'` : ""}
+      WHERE (ParkingLotId = ${parkingLotId} AND Id = ${membershipId})
+    `;
+
+      try {
+        const exe = await asyncQuery(query);
+        if (exe.affectedRows > 0) {
+          res.json({
+            message: "Successful",
+          });
+        } else {
+          res.status(404).json({
+            message: "Not found",
+          });
+        }
+        return;
+      } catch (err) {
+        res.status(400).json({ message: "Error", err });
+        return;
+      }
+    }
+  );
 };

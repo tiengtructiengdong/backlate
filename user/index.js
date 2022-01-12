@@ -19,7 +19,11 @@ module.exports = (app, pool) => {
       var query = `SELECT * FROM User WHERE Id = ${id} LIMIT 1`;
       var data = await asyncQuery(query);
 
-      var json = data[0] ? JSON.parse(JSON.stringify(data[0])) : {};
+      if (data.length === 0) {
+        throw new Error("Not found");
+      }
+
+      var json = JSON.parse(JSON.stringify(data[0]));
 
       userInfo = {
         id: json.Id,
@@ -54,7 +58,7 @@ module.exports = (app, pool) => {
 
       res.json(userInfo);
     } catch (err) {
-      res.status(400).json({ message: "Error" });
+      res.status(400).json({ message: err });
       return;
     }
   });
