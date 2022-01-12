@@ -2,7 +2,7 @@ const verifyRequest = require("../auth/verifyRequest");
 const { promisify } = require("util");
 
 module.exports = (app, pool) => {
-  app.post("/parkingLot/:id/addPartner", (req, res) => {
+  app.post("/parkingLot/:id/addPartner", async (req, res) => {
     const { partnerId } = req.body;
     const parkingLotId = req.params.id;
 
@@ -27,7 +27,7 @@ module.exports = (app, pool) => {
     });
   });
 
-  app.get("/parkingLot/:id/getPartner", (req, res) => {
+  app.get("/parkingLot/:id/getPartner", async (req, res) => {
     const parkingLotId = req.params.id;
 
     try {
@@ -55,7 +55,7 @@ module.exports = (app, pool) => {
     });
   });
 
-  app.delete("/parkingLot/:id/deletePartner", (req, res) => {
+  app.delete("/parkingLot/:id/deletePartner", async (req, res) => {
     const { partnerId } = req.body;
     const parkingLotId = req.params.id;
 
