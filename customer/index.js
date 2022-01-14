@@ -174,12 +174,16 @@ module.exports = (app, pool) => {
         FROM 
           ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
           JOIN Membership ON Membership.Id = Customer.MembershipId
-        WHERE Customer.PlateId = ${plateId}
+          JOIN ParkingLot ON Membership.ParkingLotId = ParkingLotId
+        WHERE 
+          Customer.PlateId = ${plateId} 
+          AND ParkingLot.OwnerId = ${id} 
+          AND ParkingLot.Id = ${parkingLotId}
       `;
       data = await asyncQuery(query);
 
       if (data.length === 0) {
-        throw new Error("Vehicle is checked out!");
+        throw new Error("No such data");
       }
 
       const raw = JSON.parse(JSON.stringify(data[0]));

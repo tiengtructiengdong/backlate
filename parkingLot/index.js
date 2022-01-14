@@ -2,6 +2,8 @@ const verifyRequest = require("../auth/verifyRequest");
 const { promisify } = require("util");
 
 module.exports = (app, pool) => {
+  const asyncQuery = promisify(pool.query).bind(pool);
+
   app.get(`/parkingLot`, async (req, res) => {
     const ownerId = req.headers.id;
 
@@ -25,7 +27,7 @@ module.exports = (app, pool) => {
   });
 
   app.post("/parkingLot/addParkingLot", async (req, res) => {
-    const { address, name, spaceCount } = req.body;
+    const { address, name, spaceCount, defaultFee } = req.body;
     const ownerId = req.headers.id;
 
     try {
@@ -35,17 +37,30 @@ module.exports = (app, pool) => {
       return;
     }
 
-    const query = `INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
-    pool.query(query, (err, data) => {
-      if (err) {
-        res.status(400).json({ message: err });
-        return;
-      }
+    try {
+      var query = `
+        INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) 
+        VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
+
+      var data = await asyncQuery(query);
+      const parkingLotId = data.insertId;
+
+      query = `
+        INSERT INTO Membership (ParkingLotId, Name, Fee, Level) 
+        VALUES (${parkingLotId}, 'Default', '${JSON.stringify(
+        defaultFee
+      )}', 0)`;
+
+      await asyncQuery(query);
+
       res.json({
         message: "Successful",
         id: data.insertId,
       });
-    });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
   });
 
   app.get(`/parkingLot/:id`, async (req, res) => {
