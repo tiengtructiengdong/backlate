@@ -61,8 +61,8 @@ module.exports = (app, pool) => {
       if (customerRaw.length === 0) {
         // get Level-0 Membership Id
         query = `
-      SELECT * FROM Membership
-      WHERE Level = 0 AND ParkingLotId = ${parkingLotId}`;
+          SELECT * FROM Membership
+          WHERE Level = 0 AND ParkingLotId = ${parkingLotId}`;
         const membershipRaw = await asyncQuery(query);
         data = JSON.parse(JSON.stringify(membershipRaw[0]));
         const membershipId = data.Id;
@@ -73,7 +73,7 @@ module.exports = (app, pool) => {
         customerId = data.insertId;
       } else {
         data = JSON.parse(JSON.stringify(customerRaw[0]));
-        customerId = data.insertId;
+        customerId = data.Id;
       }
 
       const code = uuidv4();
