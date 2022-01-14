@@ -83,12 +83,14 @@ module.exports = async (pool) => {
     Customer(
       Id int AUTO_INCREMENT,
       PlateId varchar(30) NOT NULL,
+      ParkingLotId int NOT NULL,
       MembershipId int NOT NULL,
       ExtraInfo JSON,
 
       PRIMARY KEY (Id),
       FOREIGN KEY (MembershipId) REFERENCES Membership(Id) ON DELETE CASCADE,
-      FOREIGN KEY (PlateId) REFERENCES Vehicle(PlateId) ON DELETE CASCADE
+      FOREIGN KEY (PlateId) REFERENCES Vehicle(PlateId) ON DELETE CASCADE,
+      FOREIGN KEY (ParkingLotId) REFERENCES ParkingLot(Id) ON DELETE CASCADE
     );
     `
     );
@@ -99,6 +101,7 @@ module.exports = async (pool) => {
       Id int AUTO_INCREMENT,
       ParkingLotId int NOT NULL,
       CustomerId int NOT NULL,
+      PlateId varchar(30) NOT NULL,
 
       Code varchar(128) NOT NULL,
       CheckinDateTime datetime NOT NULL,
@@ -112,7 +115,8 @@ module.exports = async (pool) => {
     );
     await asyncQuery(
       `
-    CREATE VIEW ActiveSession
+    CREATE VIEW IF NOT EXISTS
+    ActiveSession
     AS SELECT * FROM Session WHERE CheckoutDateTime IS NULL
     `
     );

@@ -1,3 +1,5 @@
+const verifyRequest = require("../auth/verifyRequest");
+
 const { v4: uuidv4 } = require("uuid");
 const { promisify } = require("util");
 
@@ -51,14 +53,21 @@ module.exports = (app, pool) => {
 
       query = `
         SELECT * FROM Customer
-        WHERE PlateId = ${plateId} AND ParkingLotId = ${parkingLotId}
-        LIMIT 1`;
+        WHERE PlateId = '${plateId}' AND ParkingLotId = ${parkingLotId}`;
       const customerRaw = await asyncQuery(query);
       var customerId;
 
+      // which MembershipId?
       if (customerRaw.length === 0) {
+        // get Level-0 Membership Id
         query = `
-          INSERT INTO Customer(ParkingLotId, PlateId) VALUES(${parkingLotId}, '${plateId}')
+      SELECT * FROM Membership
+      WHERE Level = 0 AND ParkingLotId = ${parkingLotId}`;
+        const membershipRaw = await asyncQuery(query);
+        data = JSON.parse(JSON.stringify(membershipRaw[0]));
+        const membershipId = data.Id;
+        query = `
+          INSERT INTO Customer(ParkingLotId, PlateId, MembershipId) VALUES(${parkingLotId}, '${plateId}', ${membershipId})
         `;
         data = await asyncQuery(query);
         customerId = data.insertId;

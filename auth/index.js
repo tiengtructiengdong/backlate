@@ -51,7 +51,7 @@ module.exports = (app, pool) => {
 
         // if user not found
         res.status(401).json({
-          message: "InvalofficialId username or password",
+          message: "Invalid username or password",
         });
         return;
       }
