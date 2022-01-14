@@ -13,13 +13,7 @@ module.exports = (app, pool) => {
       res.status(403).json({ message: "Forbidden: Not logged in" });
       return;
     }
-    /*`
-      SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
-      FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
-      WHERE (ParkingLot.Id = ${parkingLotId} AND (
-        ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
-      ))
-    `; */
+
     var query = `
       SELECT Id FROM ParkingLot
       WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 

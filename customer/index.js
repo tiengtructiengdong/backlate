@@ -143,7 +143,7 @@ module.exports = (app, pool) => {
     }
   });
 
-  app.get("/parkingLot/:id/getParkingPrice", async (req, res) => {
+  app.get("/parkingLot/:id/getParkingFee", async (req, res) => {
     const id = req.headers.id;
     const parkingLotId = req.params.id;
 
@@ -161,8 +161,10 @@ module.exports = (app, pool) => {
 
     try {
       query = `
-        SELECT Customer.Id
-        FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
+        SELECT ActiveSession.CheckinDateTime, Membership.Fee
+        FROM 
+          ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
+          JOIN Membership ON Membership.Id = Customer.MembershipId
         WHERE Customer.PlateId = ${plateId}
       `;
       data = await asyncQuery(query);
@@ -171,7 +173,48 @@ module.exports = (app, pool) => {
         throw new Error("Vehicle is checked out!");
       }
 
-      res.json({ parkingLotId, plateId, customerId, code });
+      const raw = JSON.parse(JSON.stringify(data[0]));
+
+      // Calculate the price
+
+      var startTime = new Date(raw.CheckinDateTime);
+      const current = new Date();
+
+      const fee = raw.Fee;
+
+      if (fee === undefined) {
+        throw new Error("Price not defined!");
+      }
+
+      if (fee.price.length === 1 && fee.frequency === "fixed") {
+        res.json({ fee: fee[0].price });
+        return;
+      }
+
+      var totalFee = 0;
+
+      while (startTime < current) {
+        for (const subFee of fee.price) {
+          const toTime = new Date(subFee.toTime);
+          const endTime = min(toTime, current);
+
+          const period = endTime.getTime() - startTime.getTime();
+          if (fee.frequency === "hourly") {
+            const hour = 1000 * 60 * 60;
+            total += (subFee.price * period) / hour;
+          } else if (fee.frequency === "daily") {
+            const day = 1000 * 60 * 24;
+            total += (subFee.price * period) / day;
+          }
+
+          startTime = endTime;
+          if (startTime >= current) {
+            break;
+          }
+        }
+      }
+
+      res.json({ totalFee });
     } catch (err) {
       res.status(400).json({ message: err });
       return;
