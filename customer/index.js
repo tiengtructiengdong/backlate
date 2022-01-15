@@ -153,7 +153,7 @@ module.exports = (app, pool) => {
   });
 
   app.get("/parkingLot/:id/getParkingFee", async (req, res) => {
-    const id = req.headers.id;
+    const userId = req.headers.id;
     const parkingLotId = req.params.id;
 
     const { plateId } = req.params;
@@ -170,6 +170,18 @@ module.exports = (app, pool) => {
 
     try {
       query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
         SELECT ActiveSession.CheckinDateTime, Membership.Fee
         FROM 
           ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
@@ -177,7 +189,6 @@ module.exports = (app, pool) => {
           JOIN ParkingLot ON Membership.ParkingLotId = ParkingLotId
         WHERE 
           Customer.PlateId = ${plateId} 
-          AND ParkingLot.OwnerId = ${id} 
           AND ParkingLot.Id = ${parkingLotId}
       `;
       data = await asyncQuery(query);
@@ -228,6 +239,88 @@ module.exports = (app, pool) => {
       }
 
       res.json({ totalFee });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
+  });
+
+  app.get("/parkingLot/:id/getActiveSession", async (req, res) => {
+    const userId = req.headers.id;
+    const parkingLotId = req.params.id;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query;
+    var data;
+
+    try {
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
+        SELECT * FROM ActiveSession WHERE ParkingLotId = ${parkingLotId}
+      `;
+
+      data = await asyncQuery(query);
+      const session = data.map((item) => JSON.parse(JSON.stringify(item)));
+
+      res.json({ parkingLotId, session });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
+  });
+
+  app.get("/parkingLot/:id/getHistory", async (req, res) => {
+    const userId = req.headers.id;
+    const parkingLotId = req.params.id;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query;
+    var data;
+
+    try {
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
+        SELECT * FROM Session WHERE ParkingLotId = ${parkingLotId}
+      `;
+
+      data = await asyncQuery(query);
+      const session = data.map((item) => JSON.parse(JSON.stringify(item)));
+
+      res.json({ parkingLotId, session });
     } catch (err) {
       res.status(400).json({ message: err });
       return;
