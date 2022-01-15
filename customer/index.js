@@ -152,36 +152,38 @@ module.exports = (app, pool) => {
     }
   });
 
-  app.get("/parkingLot/:id/getParkingFee", async (req, res) => {
-    const userId = req.headers.id;
-    const parkingLotId = req.params.id;
+  app.get(
+    "/parkingLot/:id/customer/:plateId/getParkingFee",
+    async (req, res) => {
+      const userId = req.headers.id;
+      const parkingLotId = req.params.id;
 
-    const { plateId } = req.params;
+      const { plateId } = req.params;
 
-    try {
-      await verifyRequest(req, pool);
-    } catch (err) {
-      res.status(403).json({ message: "Forbidden: Not logged in" });
-      return;
-    }
+      try {
+        await verifyRequest(req, pool);
+      } catch (err) {
+        res.status(403).json({ message: "Forbidden: Not logged in" });
+        return;
+      }
 
-    var query;
-    var data;
+      var query;
+      var data;
 
-    try {
-      query = `
+      try {
+        query = `
         SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
         FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
         WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
-      data = await asyncQuery(query);
+        data = await asyncQuery(query);
 
-      if (data.length === 0) {
-        throw new Error("No such parking lot");
-      }
+        if (data.length === 0) {
+          throw new Error("No such parking lot");
+        }
 
-      query = `
+        query = `
         SELECT ActiveSession.CheckinDateTime, Membership.Fee
         FROM 
           ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
@@ -191,59 +193,60 @@ module.exports = (app, pool) => {
           Customer.PlateId = ${plateId} 
           AND ParkingLot.Id = ${parkingLotId}
       `;
-      data = await asyncQuery(query);
+        data = await asyncQuery(query);
 
-      if (data.length === 0) {
-        throw new Error("No such data");
-      }
+        if (data.length === 0) {
+          throw new Error("No such data");
+        }
 
-      const raw = JSON.parse(JSON.stringify(data[0]));
+        const raw = JSON.parse(JSON.stringify(data[0]));
 
-      // Calculate the price
+        // Calculate the price
 
-      var startTime = new Date(raw.CheckinDateTime);
-      const current = new Date();
+        var startTime = new Date(raw.CheckinDateTime);
+        const current = new Date();
 
-      const fee = raw.Fee;
+        const fee = raw.Fee;
 
-      if (fee === undefined) {
-        throw new Error("Price not defined!");
-      }
+        if (fee === undefined) {
+          throw new Error("Price not defined!");
+        }
 
-      if (fee.price.length === 1 && fee.frequency === "fixed") {
-        res.json({ fee: fee[0].price });
-        return;
-      }
+        if (fee.price.length === 1 && fee.frequency === "fixed") {
+          res.json({ fee: fee[0].price });
+          return;
+        }
 
-      var totalFee = 0;
+        var totalFee = 0;
 
-      while (startTime < current) {
-        for (const subFee of fee.price) {
-          const toTime = new Date(subFee.toTime);
-          const endTime = min(toTime, current);
+        while (startTime < current) {
+          for (const subFee of fee.price) {
+            const toTime = new Date(subFee.toTime);
+            const endTime = min(toTime, current);
 
-          const period = endTime.getTime() - startTime.getTime();
-          if (fee.frequency === "hourly") {
-            const hour = 1000 * 60 * 60;
-            total += (subFee.price * period) / hour;
-          } else if (fee.frequency === "daily") {
-            const day = 1000 * 60 * 24;
-            total += (subFee.price * period) / day;
-          }
+            const period = endTime.getTime() - startTime.getTime();
+            if (fee.frequency === "hourly") {
+              const hour = 1000 * 60 * 60;
+              total += (subFee.price * period) / hour;
+            } else if (fee.frequency === "daily") {
+              const day = 1000 * 60 * 24;
+              total += (subFee.price * period) / day;
+            }
 
-          startTime = endTime;
-          if (startTime >= current) {
-            break;
+            startTime = endTime;
+            if (startTime >= current) {
+              break;
+            }
           }
         }
-      }
 
-      res.json({ totalFee });
-    } catch (err) {
-      res.status(400).json({ message: err });
-      return;
+        res.json({ totalFee });
+      } catch (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
     }
-  });
+  );
 
   app.get("/parkingLot/:id/getActiveSession", async (req, res) => {
     const userId = req.headers.id;
@@ -321,6 +324,106 @@ module.exports = (app, pool) => {
       const session = data.map((item) => JSON.parse(JSON.stringify(item)));
 
       res.json({ parkingLotId, session });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
+  });
+
+  app.get("/parkingLot/:id/customer/:plateId/getHistory", async (req, res) => {
+    const userId = req.headers.id;
+    const parkingLotId = req.params.id;
+
+    const { plateId } = req.params;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query;
+    var data;
+
+    try {
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
+        SELECT * FROM Session WHERE ParkingLotId = ${parkingLotId} AND PlateId = '${plateId}'
+      `;
+
+      data = await asyncQuery(query);
+      const session = data.map((item) => JSON.parse(JSON.stringify(item)));
+
+      res.json({ parkingLotId, plateId, session });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
+  });
+
+  app.put("/parkingLot/:id/customer/:plateId/update", async (req, res) => {
+    const userId = req.headers.id;
+    const parkingLotId = req.params.id;
+
+    const { plateId } = req.body;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query;
+    var data;
+
+    try {
+      query = `
+        SELECT Customer.Id
+        FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
+        WHERE Customer.PlateId = '${plateId}'
+      `;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("Vehicle is checked out!");
+      }
+
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
+        UPDATE Session SET CheckoutDateTime = CURRENT_TIMESTAMP()
+        WHERE (PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
+      `;
+
+      data = await asyncQuery(query);
+      if (data.affectedRows === 0) {
+        throw new Error("Error checking out");
+      }
+
+      res.json({ message: "Checkout successful", plateId });
     } catch (err) {
       res.status(400).json({ message: err });
       return;

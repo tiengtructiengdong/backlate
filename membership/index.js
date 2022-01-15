@@ -90,17 +90,17 @@ module.exports = (app, pool) => {
       }
 
       query = `
-      UPDATE Membership
-      SET 
-        ${
-          fee
-            ? `Fee = '${JSON.stringify(fee)}' ${name || level ? "," : ""}`
-            : ""
-        } 
-        ${name ? `Name = '${name}' ${level ? "," : ""}` : ""} 
-        ${level ? `Level = '${level}'` : ""}
-      WHERE (ParkingLotId = ${parkingLotId} AND Id = ${membershipId})
-    `;
+        UPDATE Membership
+        SET 
+          ${
+            fee
+              ? `Fee = '${JSON.stringify(fee)}' ${name || level ? "," : ""}`
+              : ""
+          } 
+          ${name ? `Name = '${name}' ${level ? "," : ""}` : ""} 
+          ${level ? `Level = '${level}'` : ""}
+        WHERE (ParkingLotId = ${parkingLotId} AND Id = ${membershipId})
+      `;
 
       try {
         const exe = await asyncQuery(query);
