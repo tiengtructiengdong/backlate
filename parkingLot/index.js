@@ -13,17 +13,30 @@ module.exports = (app, pool) => {
       res.status(403).json({ message: "Forbidden: Not logged in" });
       return;
     }
-    const query = `
-      SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId}
-    `;
-    pool.query(query, (err, userData) => {
-      if (err) {
-        res.status(400).json({ message: err });
-        return;
-      }
-      var json = userData.map((data) => JSON.parse(JSON.stringify(data)));
-      res.json({ data: json });
-    });
+
+    try {
+      var query = `
+        SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId}
+      `;
+      var userData = await asyncQuery(query);
+      const myParkingLot = userData.map((data) =>
+        JSON.parse(JSON.stringify(data))
+      );
+
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.Address, ParkingLot.Name, ParkingLot.SpaceCount
+        FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+        WHERE Partnership.PartnerId = ${ownerId}
+      `;
+      userData = await asyncQuery(query);
+      const workingParkingLot = userData.map((data) =>
+        JSON.parse(JSON.stringify(data))
+      );
+
+      res.json({ myParkingLot, workingParkingLot });
+    } catch (err) {
+      res.status(400).json({ message: err });
+    }
   });
 
   app.post("/parkingLot/addParkingLot", async (req, res) => {

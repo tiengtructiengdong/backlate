@@ -17,15 +17,6 @@ module.exports = (app, pool) => {
         if (userData.length >= 1) {
           var json = JSON.parse(JSON.stringify(userData[0]));
           console.log(json);
-          // if user is found
-          // Log in from other device: update token?
-
-          /*if (json.UserToken) {
-            res.status(400).json({
-              message: "Already logged in",
-            });
-            return;
-          }*/
 
           const token = jwt.sign({ foo: number }, password);
 
@@ -62,10 +53,9 @@ module.exports = (app, pool) => {
   });
 
   app.post("/auth/logout", (req, res) => {
-    const { officialId } = req.body;
+    const { id } = req.body;
 
-    const query = `SELECT * FROM User WHERE OfficialId = '${officialId}'`;
-
+    const query = `UPDATE User SET UserToken = NULL WHERE Id = '${id}'`;
     pool.query(query, (err, userData) => {
       if (err) {
         res.status(500).json({
@@ -73,21 +63,10 @@ module.exports = (app, pool) => {
         });
         return;
       }
-      if (phoneNumber) {
-        const query = `UPDATE User SET UserToken = NULL WHERE OfficialId = '${officialId}'`;
-        pool.query(query, (err, userData) => {
-          if (err) {
-            res.status(500).json({
-              message: err.sqlMessage,
-            });
-            return;
-          }
-          res.json({
-            message: "Logout",
-          });
-          return;
-        });
-      }
+      res.json({
+        message: "Logout",
+      });
+      return;
     });
   });
 

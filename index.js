@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 1950;
 
 var mysql = require("mysql");
 
@@ -55,7 +55,7 @@ createUnixSocketPool().then((pool) => {
   require("./parkingLot")(app, pool);
   require("./membership")(app, pool);
   require("./customer")(app, pool);
-  app.listen(PORT, (req, res) => {
+  app.listen(PORT, "192.168.1.12", (req, res) => {
     console.log(`Server is running at port ${PORT}`);
   });
 });
