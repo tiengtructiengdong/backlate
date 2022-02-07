@@ -199,6 +199,13 @@ module.exports = (app, pool) => {
     const { id, keyword } = req.params;
     const ownerId = req.headers.id;
 
+    if (keyword === undefined || keyword === null || keyword.length < 4) {
+      res
+        .status(400)
+        .json({ message: "Input should be longer than 4 characters!" });
+      return;
+    }
+
     const parsedKeyword = keyword.replace(".", "");
 
     try {
@@ -208,12 +215,6 @@ module.exports = (app, pool) => {
       return;
     }
 
-    if (keyword.length < 4) {
-      res
-        .status(400)
-        .json({ message: "Input should be longer than 4 characters!" });
-      return;
-    }
 
     const query = `
       SELECT * FROM Session 
