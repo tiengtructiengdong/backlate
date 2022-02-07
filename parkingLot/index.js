@@ -167,7 +167,7 @@ module.exports = (app, pool) => {
   });
 
   app.get(`/searchUser`, async (req, res) => {
-    const { keyword } = req.params;
+    const { keyword } = req.query;
 
     try {
       await verifyRequest(req, pool);
@@ -197,7 +197,7 @@ module.exports = (app, pool) => {
 
   app.get(`/parkingLot/:id/searchVehicle`, async (req, res) => {
     const { id } = req.params;
-    const {keyword} = req.query;
+    const { keyword } = req.query;
     const ownerId = req.headers.id;
 
     if (keyword === undefined || keyword === null || keyword.length < 4) {
@@ -215,7 +215,6 @@ module.exports = (app, pool) => {
       res.status(403).json({ message: "Forbidden: Not logged in" });
       return;
     }
-
 
     const query = `
       SELECT * FROM Session 
