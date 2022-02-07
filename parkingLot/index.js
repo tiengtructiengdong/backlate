@@ -165,4 +165,69 @@ module.exports = (app, pool) => {
       message: "Successful",
     });
   });
+
+  app.get(`/searchUser`, async (req, res) => {
+    const { keyword } = req.params;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    const query = `
+      SELECT Id, PhoneNumber, FullName FROM User 
+      WHERE 
+        OfficialId = '${keyword}' 
+        OR FullName LIKE '${keyword}%'
+        OR FullName LIKE '% ${keyword}%'
+        OR PhoneNumber = '${keyword}'
+      LIMIT 10;
+    `;
+    pool.query(query, (err, data) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+      var users = data.map((item) => JSON.parse(JSON.stringify(item)));
+      res.json({ users });
+    });
+  });
+
+  app.get(`/parkingLot/:id/searchVehicle`, async (req, res) => {
+    const { id, keyword } = req.params;
+    const ownerId = req.headers.id;
+
+    const parsedKeyword = keyword.replace(".", "");
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    if (keyword.length < 4) {
+      res
+        .status(400)
+        .json({ message: "Input should be longer than 4 characters!" });
+      return;
+    }
+
+    const query = `
+      SELECT * FROM Session 
+      WHERE 
+        ParkingLotId = ${id}
+        AND REPLACE(PlateId, '.', '') LIKE '%${parsedKeyword}%'
+      LIMIT 10
+    `;
+    try {
+      var data = await asyncQuery(query);
+      const vehicles = data.map((item) => JSON.parse(JSON.stringify(item)));
+      res.json({ vehicles });
+    } catch (err) {
+      res.status(400).json({ message: err });
+    }
+  });
 };
