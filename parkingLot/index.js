@@ -196,7 +196,8 @@ module.exports = (app, pool) => {
   });
 
   app.get(`/parkingLot/:id/searchVehicle`, async (req, res) => {
-    const { id, keyword } = req.params;
+    const { id } = req.params;
+    const {keyword} = req.query;
     const ownerId = req.headers.id;
 
     if (keyword === undefined || keyword === null || keyword.length < 4) {
