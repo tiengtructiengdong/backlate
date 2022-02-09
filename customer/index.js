@@ -10,7 +10,7 @@ module.exports = (app, pool) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
 
-    const { plateId } = req.body;
+    const { code } = req.body;
 
     try {
       await verifyRequest(req, pool);
@@ -48,11 +48,16 @@ module.exports = (app, pool) => {
 
       query = `
         SELECT * FROM Session 
-        WHERE (ParkingLotId = ${parkingLotId} AND PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
+        WHERE (ParkingLotId = ${parkingLotId} AND Code = '${code}' AND CheckoutDateTime IS NULL)
       `;
 
       data = await asyncQuery(query);
-      res.json({ isFound: data.length === 0 });
+      if (data.length === 0) {
+        res.json({ isFound: false });
+      } else {
+        const plateId = JSON.parse(JSON.stringify(data[0])).PlateId;
+        res.json({ isFound: true, plateId });
+      }
     } catch (err) {
       res.status(400).json({ message: err });
       return;
@@ -152,7 +157,7 @@ module.exports = (app, pool) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
 
-    const { plateId } = req.body;
+    const { code } = req.body;
 
     try {
       await verifyRequest(req, pool);
@@ -189,8 +194,9 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        UPDATE Session SET CheckoutDateTime = CURRENT_TIMESTAMP()
-        WHERE (PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
+        UPDATE Session 
+        SET CheckoutDateTime = CURRENT_TIMESTAMP(), Code = ''
+        WHERE (Code = '${code}' AND CheckoutDateTime IS NULL)
       `;
 
       data = await asyncQuery(query);
