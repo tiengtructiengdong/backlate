@@ -6,6 +6,59 @@ const { promisify } = require("util");
 module.exports = (app, pool) => {
   const asyncQuery = promisify(pool.query).bind(pool);
 
+  app.post("/parkingLot/:id/testCheckout", async (req, res) => {
+    const userId = req.headers.id;
+    const parkingLotId = req.params.id;
+
+    const { plateId } = req.body;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query;
+    var data;
+
+    try {
+      query = `
+        SELECT Customer.Id
+        FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
+        WHERE Customer.PlateId = '${plateId}'
+      `;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("Vehicle is checked out!");
+      }
+
+      query = `
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
+          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+        ))`;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
+        throw new Error("No such parking lot");
+      }
+
+      query = `
+        SELECT * FROM Session 
+        WHERE (ParkingLotId = ${parkingLotId} AND PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
+      `;
+
+      data = await asyncQuery(query);
+      res.json({ isFound: data.length === 0 });
+    } catch (err) {
+      res.status(400).json({ message: err });
+      return;
+    }
+  });
+
   app.post("/parkingLot/:id/checkin", async (req, res) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
