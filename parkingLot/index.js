@@ -95,23 +95,28 @@ module.exports = (app, pool) => {
           ParkingLot.Address, 
           ParkingLot.Name, 
           ParkingLot.SpaceCount
-        FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+        FROM ParkingLot LEFT JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
         WHERE 
           (ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId})
           AND ParkingLot.Id = ${id}
       `;
       var response = await asyncQuery(query);
 
-      var parkingLotData = response.map((item) =>
-        JSON.parse(JSON.stringify(item))
-      );
+      console.log('userId', userId, 'parkingLotId', id, response)
+
+      if (response.length === 0) {
+        throw new Error('No records')
+      }
+
+      var parkingLot = JSON.parse(JSON.stringify(response[0]));
+      
       query = `
         SELECT * FROM Membership WHERE ParkingLotId = ${id}
       `;
       response = await asyncQuery(query);
 
       var membership = response.map((item) => JSON.parse(JSON.stringify(item)));
-      res.json({ ...parkingLotData, membership });
+      res.json({ parkingLot, membership });
     } catch (err) {
       res.status(400).json({ message: err });
     }
