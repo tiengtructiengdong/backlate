@@ -53,7 +53,7 @@ module.exports = (app, pool) => {
     try {
       var query = `
         INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) 
-        VALUES (${ownerId},'${name}','${address}',${spaceCount})`;
+        VALUES (${ownerId},'${name}','${address}',${spaceCount || 0})`;
 
       var data = await asyncQuery(query);
       const parkingLotId = data.insertId;
@@ -78,7 +78,7 @@ module.exports = (app, pool) => {
 
   app.get(`/parkingLot/:id`, async (req, res) => {
     const { id } = req.params;
-    const ownerId = req.headers.id;
+    const userId = req.headers.id;
 
     try {
       await verifyRequest(req, pool);
@@ -87,29 +87,34 @@ module.exports = (app, pool) => {
       return;
     }
 
-    const query = `
-      SELECT * FROM ParkingLot WHERE OwnerId = ${ownerId} AND Id = ${id}
-    `;
-    pool.query(query, (err, userData) => {
-      if (err) {
-        res.status(400).json({ message: err });
-        return;
-      }
-      var parkingLotData = userData.map((data) =>
-        JSON.parse(JSON.stringify(data))
+    try {
+      var query = `
+        SELECT 
+          ParkingLot.Id, 
+          ParkingLot.OwnerId, 
+          ParkingLot.Address, 
+          ParkingLot.Name, 
+          ParkingLot.SpaceCount
+        FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+        WHERE 
+          (ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId})
+          AND ParkingLot.Id = ${id}
+      `;
+      var response = await asyncQuery(query);
+
+      var parkingLotData = response.map((item) =>
+        JSON.parse(JSON.stringify(item))
       );
-      const q = `
-            SELECT * FROM Membership WHERE ParkingLotId = ${id}
-          `;
-      pool.query(q, (err, data) => {
-        if (err) {
-          res.status(400).json({ message: err });
-          return;
-        }
-        var membership = data.map((item) => JSON.parse(JSON.stringify(item)));
-        res.json({ ...parkingLotData, membership });
-      });
-    });
+      query = `
+        SELECT * FROM Membership WHERE ParkingLotId = ${id}
+      `;
+      response = await asyncQuery(query);
+
+      var membership = response.map((item) => JSON.parse(JSON.stringify(item)));
+      res.json({ ...parkingLotData, membership });
+    } catch (err) {
+      res.status(400).json({ message: err });
+    }
   });
 
   // cannot set headers?
