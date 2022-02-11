@@ -20,6 +20,11 @@ module.exports = async (pool) => {
     ); 
     `
     );
+
+    /*
+      Latitude DOUBLE(10,6) NOT NULL,
+      Longitude DOUBLE(10,6) NOT NULL, 
+    */
     await asyncQuery(
       `
     CREATE TABLE IF NOT EXISTS 
