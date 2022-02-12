@@ -27,7 +27,7 @@ module.exports = (app, pool) => {
       query = `
         SELECT Customer.Id
         FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
-        WHERE Customer.PlateId = '${plateId}'
+        WHERE ActiveSession.Code = '${code}' 
       `;
       data = await asyncQuery(query);
 
@@ -234,7 +234,7 @@ module.exports = (app, pool) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
 
-    const { code } = req.body;
+    const { plateId } = req.body;
 
     try {
       await verifyRequest(req, pool);
@@ -273,7 +273,7 @@ module.exports = (app, pool) => {
       query = `
         UPDATE Session 
         SET CheckoutDateTime = CURRENT_TIMESTAMP(), Code = ''
-        WHERE (Code = '${code}' AND CheckoutDateTime IS NULL)
+        WHERE (PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
       `;
 
       data = await asyncQuery(query);
