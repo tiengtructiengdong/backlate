@@ -509,60 +509,65 @@ module.exports = (app, pool) => {
     }
   });
 
-  app.put("/parkingLot/:id/customer/:plateId/update", async (req, res) => {
-    const userId = req.headers.id;
-    const parkingLotId = req.params.id;
+  app.put(
+    "/parkingLot/:id/customer/:plateId/setMembership",
+    async (req, res) => {
+      const userId = req.headers.id;
+      const parkingLotId = req.params.id;
 
-    const { plateId } = req.body;
+      const { plateId, membershipId } = req.body;
 
-    try {
-      await verifyRequest(req, pool);
-    } catch (err) {
-      res.status(403).json({ message: "Forbidden: Not logged in" });
-      return;
+      try {
+        await verifyRequest(req, pool);
+      } catch (err) {
+        res.status(403).json({ message: "Forbidden: Not logged in" });
+        return;
+      }
+
+      var query;
+      var data;
+
+      try {
+        query = `
+          SELECT Customer.Id
+          FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
+          WHERE Customer.PlateId = '${plateId}'
+        `;
+        data = await asyncQuery(query);
+
+        if (data.length === 0) {
+          throw new Error("Vehicle is checked out!");
+        }
+
+        query = `
+          SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+          FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+          WHERE (ParkingLot.Id = ${parkingLotId} AND (
+            ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
+          ))`;
+        data = await asyncQuery(query);
+
+        if (data.length === 0) {
+          throw new Error("No such parking lot");
+        }
+
+        query = `
+          UPDATE Customer SET MembershipId = ${membershipId}
+          WHERE 
+            (PlateId = '${plateId}' 
+            AND ParkingLotId = ${parkingLotId}
+        `;
+
+        data = await asyncQuery(query);
+        if (data.affectedRows === 0) {
+          throw new Error("Error setting membership");
+        }
+
+        res.json({ message: "Successful" });
+      } catch (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
     }
-
-    var query;
-    var data;
-
-    try {
-      query = `
-        SELECT Customer.Id
-        FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
-        WHERE Customer.PlateId = '${plateId}'
-      `;
-      data = await asyncQuery(query);
-
-      if (data.length === 0) {
-        throw new Error("Vehicle is checked out!");
-      }
-
-      query = `
-        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
-        WHERE (ParkingLot.Id = ${parkingLotId} AND (
-          ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
-        ))`;
-      data = await asyncQuery(query);
-
-      if (data.length === 0) {
-        throw new Error("No such parking lot");
-      }
-
-      query = `
-        UPDATE Session SET CheckoutDateTime = CURRENT_TIMESTAMP()
-        WHERE (PlateId = '${plateId}' AND CheckoutDateTime IS NULL)
-      `;
-
-      data = await asyncQuery(query);
-      if (data.affectedRows === 0) {
-        throw new Error("Error checking out");
-      }
-
-      res.json({ message: "Checkout successful", plateId });
-    } catch (err) {
-      res.status(400).json({ message: err });
-      return;
-    }
-  });
+  );
 };
