@@ -4,9 +4,9 @@ module.exports = (app, pool) => {
   app.get("/bstien/gia", async (req, res) => {
     const { passcode } = req.headers.id;
 
-    if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
-      res.status(400).json({ message: "nope" });
-    }
+    // if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
+    //   res.status(400).json({ message: "nope" });
+    // }
     try {
       const query = "SELECT * FROM bstien";
       const response = await asyncQuery(query);
@@ -26,9 +26,9 @@ module.exports = (app, pool) => {
     const { passcode } = req.headers.id;
     const { name, xutri, price } = req.body;
 
-    if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
-      res.status(400).json({ message: "nope" });
-    }
+    // if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
+    //   res.status(400).json({ message: "nope" });
+    // }
     try {
       const query = `
         INSERT INTO bstien (name, xutri, price)
@@ -47,9 +47,9 @@ module.exports = (app, pool) => {
     const { passcode } = req.headers.id;
     const { id, paid } = req.body;
 
-    if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
-      res.status(400).json({ message: "nope" });
-    }
+    // if (passcode != "95g4ugfif8-kdasjko832947fhcj3je8fj") {
+    //   res.status(400).json({ message: "nope" });
+    // }
     var query;
     var response;
     var data;
