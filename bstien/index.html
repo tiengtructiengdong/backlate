@@ -30,12 +30,8 @@
   };
   const getOrder = async () => {
     try {
-      const response = await fetch("http://192.168.1.16:1950/parkingLot", {
+      const response = await fetch("http://192.168.1.16:1950/bstien/gia", {
         method: "GET",
-        mode: "cors",
-        headers: {
-          origin: "http://127.0.0.1/",
-        },
       });
       console.log(response);
       await sleep(5000);
