@@ -125,6 +125,19 @@ module.exports = async (pool) => {
     AS SELECT * FROM Session WHERE CheckoutDateTime IS NULL
     `
     );
+    await asyncQuery(
+      `
+    CREATE TABLE IF NOT EXISTS 
+    bstien(
+      id int AUTO_INCREMENT,
+      name varchar(256) NOT NULL,
+      xutri varchar(500) NOT NULL,
+      price int NOT NULL,
+
+      PRIMARY KEY (id)
+    );
+    `
+    );
   } catch (err) {
     console.log(err);
   }
