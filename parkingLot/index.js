@@ -102,14 +102,14 @@ module.exports = (app, pool) => {
       `;
       var response = await asyncQuery(query);
 
-      console.log('userId', userId, 'parkingLotId', id, response)
+      console.log("userId", userId, "parkingLotId", id, response);
 
       if (response.length === 0) {
-        throw new Error('No records')
+        throw new Error("No records");
       }
 
       var parkingLot = JSON.parse(JSON.stringify(response[0]));
-      
+
       query = `
         SELECT * FROM Membership WHERE ParkingLotId = ${id}
       `;

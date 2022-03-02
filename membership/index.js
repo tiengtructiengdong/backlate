@@ -54,6 +54,53 @@ module.exports = (app, pool) => {
     });
   });
 
+  app.delete("/parkingLot/:id/deleteMembership", async (req, res) => {
+    const { membershipId } = req.body;
+    const parkingLotId = req.params.id;
+    const userId = req.headers.id;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    var query = `
+      SELECT Id FROM ParkingLot
+      WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
+    `;
+    const asyncQuery = promisify(pool.query).bind(pool);
+
+    try {
+      const exe = await asyncQuery(query);
+      if (exe.length === 0) {
+        res.status(403).json({
+          message:
+            "Forbidden: You do not have permission with this parking lot.",
+        });
+        return;
+      }
+    } catch (err) {
+      res.status(400).json({ message: "Error" });
+      return;
+    }
+
+    //
+    query = `
+      DELETE FROM Membership WHERE Id = ${membershipId}
+    `;
+    pool.query(query, (err, data) => {
+      if (err) {
+        res.status(400).json({ message: err });
+        return;
+      }
+      res.json({
+        message: "Successful",
+      });
+    });
+  });
+
   app.put(
     "/parkingLot/:id/membership/:membershipId/updateMembership",
     async (req, res) => {
