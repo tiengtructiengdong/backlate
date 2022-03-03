@@ -71,25 +71,6 @@ module.exports = (app, pool) => {
 
     const { plateId } = req.body;
 
-    const encodeEscPos = (data, code) => {
-      const encoder = new EscPosEncoder();
-      const res = encoder
-        .initialize()
-        .bold()
-        .text(data.name || "Parking Lot: No Name")
-        .newline()
-        .text(data.address || "")
-        .newline()
-        .newline()
-        .bold()
-        .text(plateId || "")
-        .newline()
-        .qrcode(code)
-        .newline()
-        .encode();
-      return res;
-    };
-
     try {
       await verifyRequest(req, pool);
     } catch (err) {
@@ -155,9 +136,7 @@ module.exports = (app, pool) => {
       }
 
       const code = uuidv4();
-      const escPosCode = encodeEscPos({}, code);
-
-      res.json({ parkingLotId, plateId, customerId, code, escPosCode });
+      res.json({ parkingLotId, plateId, customerId, code });
     } catch (err) {
       res.status(400).json({ message: err });
       return;
