@@ -1,6 +1,9 @@
 var jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 
 module.exports = (app, pool) => {
+  const asyncQuery = promisify(pool.query).bind(pool);
+
   app.post("/auth/login", (req, res) => {
     const { number, password } = req.body;
 
@@ -70,14 +73,24 @@ module.exports = (app, pool) => {
     });
   });
 
-  app.post("/auth/register", (req, res) => {
-    const { officialId, fullName, phoneNumber, password } = req.body;
+  app.post("/auth/register", async (req, res) => {
+    const {
+      officialId,
+      fullName,
+      phoneNumber,
+      password,
+      address,
+      name,
+      spaceCount,
+    } = req.body;
 
     if (
       officialId == "" ||
       fullName == "" ||
       phoneNumber == "" ||
-      password == ""
+      password == "" ||
+      address == "" ||
+      name == ""
     ) {
       res.status(400).json({
         message: "Inputs cannot be blank!",
@@ -85,23 +98,39 @@ module.exports = (app, pool) => {
       return;
     }
 
-    const query = `INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
+    try {
+      var query = `INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
                     VALUES('${officialId}', '${fullName}', '${phoneNumber}', '${password}')`;
+      var data = await asyncQuery(query);
 
-    pool.query(query, (err, sqlResult) => {
-      if (err) {
-        res.status(400).json({
-          message: err,
-        });
-        return;
-      }
+      const ownerId = data.insertId;
+      query = `
+        INSERT INTO ParkingLot (OwnerId, Name, Address, SpaceCount) 
+        VALUES (${ownerId},'${name}','${address}',${spaceCount || 0})`;
+
+      data = await asyncQuery(query);
+
+      const parkingLotId = data.insertId;
+      query = `
+        INSERT INTO Membership (ParkingLotId, Name, Fee, Level) 
+        VALUES (${parkingLotId}, 'Default', '${JSON.stringify(
+        defaultFee
+      )}', 0)`;
+
+      await asyncQuery(query);
+
       console.log("New user is added\n", sqlResult);
       res.json({
+        message: "Successful",
         officialId: officialId,
         fullName: fullName,
         phoneNumber: phoneNumber,
       });
-    });
+    } catch (err) {
+      res.status(400).json({
+        message: err,
+      });
+    }
   });
 
   app.post("/auth/verify", (req, res) => {
