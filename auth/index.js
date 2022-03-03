@@ -128,7 +128,6 @@ module.exports = (app, pool) => {
         phoneNumber: phoneNumber,
       });
     } catch (err) {
-      throw new Error(err)
       res.status(400).json({
         message: err,
       });
