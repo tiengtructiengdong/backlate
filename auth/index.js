@@ -118,9 +118,9 @@ module.exports = (app, pool) => {
         defaultFee
       )}', 0)`;
 
-      await asyncQuery(query);
+      data = await asyncQuery(query);
 
-      console.log("New user is added\n", sqlResult);
+      console.log("New user is added\n", data);
       res.json({
         message: "Successful",
         officialId: officialId,
@@ -128,6 +128,7 @@ module.exports = (app, pool) => {
         phoneNumber: phoneNumber,
       });
     } catch (err) {
+      throw new Error(err)
       res.status(400).json({
         message: err,
       });
