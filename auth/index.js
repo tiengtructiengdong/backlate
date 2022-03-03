@@ -82,6 +82,7 @@ module.exports = (app, pool) => {
       address,
       name,
       spaceCount,
+      defaultFee,
     } = req.body;
 
     if (
