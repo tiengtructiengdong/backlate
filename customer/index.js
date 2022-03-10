@@ -548,7 +548,7 @@ module.exports = (app, pool) => {
         query = `
           UPDATE Customer SET MembershipId = ${membershipId}
           WHERE 
-            (PlateId = '${plateId}' 
+            PlateId = '${plateId}' 
             AND ParkingLotId = ${parkingLotId}
         `;
 
