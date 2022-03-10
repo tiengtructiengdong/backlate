@@ -405,7 +405,7 @@ module.exports = (app, pool) => {
           ActiveSession AS s
           JOIN Customer AS c ON s.CustomerId = c.Id
           JOIN Membership AS m ON c.MembershipId = m.Id
-        WHERE ActiveSession.ParkingLotId = ${parkingLotId}
+        WHERE s.ParkingLotId = ${parkingLotId}
       `;
 
       data = await asyncQuery(query);

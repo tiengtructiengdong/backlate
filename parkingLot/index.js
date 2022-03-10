@@ -242,7 +242,7 @@ module.exports = (app, pool) => {
         JOIN Customer AS c ON s.CustomerId = c.Id
         JOIN Membership AS m ON c.MembershipId = m.Id
       WHERE 
-        ActiveSession.ParkingLotId = ${id}
+        s.ParkingLotId = ${id}
         AND REPLACE(s.PlateId, '.', '') LIKE '%${parsedKeyword}%'
       LIMIT 10
     `;
