@@ -392,6 +392,19 @@ module.exports = (app, pool) => {
         throw new Error("No such parking lot");
       }
 
+      var vehicleCount;
+      if (page >= 2) {
+        query = `
+          SELECT 
+            COUNT(Id) AS num
+          FROM 
+            ActiveSession
+          WHERE ParkingLotId = ${parkingLotId}
+        `;
+        data = await asyncQuery(query);
+        vehicleCount = JSON.parse(JSON.stringify(data[0])).num;
+      }
+
       query = `
         SELECT 
           s.Id, 
@@ -415,7 +428,7 @@ module.exports = (app, pool) => {
       data = await asyncQuery(query);
       const session = data.map((item) => JSON.parse(JSON.stringify(item)));
 
-      res.json({ parkingLotId, session });
+      res.json({ parkingLotId, session, vehicleCount });
     } catch (err) {
       res.status(400).json({ message: err });
       return;
