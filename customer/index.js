@@ -507,8 +507,9 @@ module.exports = (app, pool) => {
     async (req, res) => {
       const userId = req.headers.id;
       const parkingLotId = req.params.id;
+      const { plateId } = req.params;
 
-      const { plateId, membershipId } = req.body;
+      const { membershipId } = req.body;
 
       try {
         await verifyRequest(req, pool);
@@ -522,9 +523,9 @@ module.exports = (app, pool) => {
 
       try {
         query = `
-          SELECT Customer.Id
-          FROM ActiveSession JOIN Customer ON ActiveSession.CustomerId = Customer.Id
-          WHERE Customer.PlateId = '${plateId}'
+          SELECT Id
+          FROM Customer
+          WHERE PlateId = '${plateId}'
         `;
         data = await asyncQuery(query);
 
