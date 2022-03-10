@@ -391,7 +391,21 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT * FROM ActiveSession WHERE ParkingLotId = ${parkingLotId}
+        SELECT 
+          s.Id, 
+          s.CheckinDateTime,
+          s.CheckoutDateTime,
+          s.Code,
+          s.CustomerId,
+          s.PlateId,
+          m.Name,
+          m.Level,
+          m.Fee
+        FROM 
+          ActiveSession AS s
+          JOIN Customer AS c ON s.CustomerId = c.Id
+          JOIN Membership AS m ON c.MembershipId = m.Id
+        WHERE ActiveSession.ParkingLotId = ${parkingLotId}
       `;
 
       data = await asyncQuery(query);

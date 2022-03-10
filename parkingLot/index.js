@@ -227,10 +227,23 @@ module.exports = (app, pool) => {
     }
 
     const query = `
-      SELECT * FROM Session 
+      SELECT 
+        s.Id, 
+        s.CheckinDateTime,
+        s.CheckoutDateTime,
+        s.Code,
+        s.CustomerId,
+        s.PlateId,
+        m.Name,
+        m.Level,
+        m.Fee
+      FROM 
+        ActiveSession AS s
+        JOIN Customer AS c ON s.CustomerId = c.Id
+        JOIN Membership AS m ON c.MembershipId = m.Id
       WHERE 
-        ParkingLotId = ${id}
-        AND REPLACE(PlateId, '.', '') LIKE '%${parsedKeyword}%'
+        ActiveSession.ParkingLotId = ${id}
+        AND REPLACE(s.PlateId, '.', '') LIKE '%${parsedKeyword}%'
       LIMIT 10
     `;
     try {
