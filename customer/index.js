@@ -367,6 +367,8 @@ module.exports = (app, pool) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
 
+    const { page } = req.query;
+
     try {
       await verifyRequest(req, pool);
     } catch (err) {
@@ -406,6 +408,8 @@ module.exports = (app, pool) => {
           JOIN Customer AS c ON s.CustomerId = c.Id
           JOIN Membership AS m ON c.MembershipId = m.Id
         WHERE s.ParkingLotId = ${parkingLotId}
+        LIMIT 10 
+        ${page > 2 ? `OFFSET ${(page - 1) * 10}` : ""}
       `;
 
       data = await asyncQuery(query);
@@ -421,6 +425,8 @@ module.exports = (app, pool) => {
   app.get("/parkingLot/:id/getHistory", async (req, res) => {
     const userId = req.headers.id;
     const parkingLotId = req.params.id;
+
+    const { page } = req.query;
 
     try {
       await verifyRequest(req, pool);
@@ -489,7 +495,11 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT * FROM Session WHERE ParkingLotId = ${parkingLotId} AND PlateId = '${plateId}'
+        SELECT * 
+        FROM Session 
+        WHERE ParkingLotId = ${parkingLotId} AND PlateId = '${plateId}'
+        LIMIT 10 
+        ${page > 2 ? `OFFSET ${(page - 1) * 10}` : ""}
       `;
 
       data = await asyncQuery(query);
