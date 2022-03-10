@@ -394,6 +394,7 @@ module.exports = (app, pool) => {
 
       var vehicleCount;
       if (page >= 2) {
+      } else {
         query = `
           SELECT 
             COUNT(Id) AS num
