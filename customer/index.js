@@ -423,7 +423,7 @@ module.exports = (app, pool) => {
           JOIN Membership AS m ON c.MembershipId = m.Id
         WHERE s.ParkingLotId = ${parkingLotId}
         LIMIT 10 
-        ${page > 2 ? `OFFSET ${(page - 1) * 10}` : ""}
+        ${page >= 2 ? `OFFSET ${(page - 1) * 10}` : ""}
       `;
 
       data = await asyncQuery(query);
