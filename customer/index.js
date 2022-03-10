@@ -422,6 +422,7 @@ module.exports = (app, pool) => {
           JOIN Customer AS c ON s.CustomerId = c.Id
           JOIN Membership AS m ON c.MembershipId = m.Id
         WHERE s.ParkingLotId = ${parkingLotId}
+        ORDER BY s.CheckinDateTime DESC
         LIMIT 10 
         ${page >= 2 ? `OFFSET ${(page - 1) * 10}` : ""}
       `;
