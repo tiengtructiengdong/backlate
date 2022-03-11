@@ -1,39 +1,21 @@
 const express = require("express");
 const app = express();
 
-const PORT = process.env.PORT || 1950;
+const PORT = process.env.PORT || 8080;
 
 var mysql = require("mysql");
-
-// var con = mysql.createConnection({
-//   host: "localhost",
-//   user: "root",
-//   password: "",
-// });
-
-// con.connect(function (err) {
-//   if (err) throw err;
-//   console.log("Connected!");
-//   con.query("CREATE DATABASE applate", function (err, result) {
-//     if (err) throw err;
-//     console.log("Database created");
-//   });
-// });
 
 const createUnixSocketPool = async () => {
   const dbSocketPath = process.env.DB_SOCKET_PATH || "/cloudsql";
 
-  // host: "localhost",
-  // user: "root",
-  // password: "",
-  // database: "applate",
-
+  // Establish a connection to the database
   return new Promise((resolve, reject) => {
     const con = mysql.createPool({
-      host: "localhost",
+      connectionLimit: 5,
       user: "root",
-      password: "",
+      password: "Bcpjm3J96Kstbht4",
       database: "applate",
+      socketPath: `${dbSocketPath}/backlate-343800:asia-east2:backlate`,
 
       connectTimeout: 10000,
       acquireTimeout: 10000,
@@ -48,15 +30,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 createUnixSocketPool().then((pool) => {
-  require("./db")(pool);
+  //require("./db")(pool);
   require("./auth")(app, pool);
   require("./user")(app, pool);
   require("./partnership")(app, pool);
   require("./parkingLot")(app, pool);
   require("./membership")(app, pool);
   require("./customer")(app, pool);
-  require("./bstien")(app, pool);
-  app.listen(PORT, "192.168.1.16", (req, res) => {
+  app.listen(PORT, (req, res) => {
     console.log(`Server is running at port ${PORT}`);
   });
 });
