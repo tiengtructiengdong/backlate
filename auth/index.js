@@ -3,6 +3,13 @@ const { promisify } = require("util");
 
 module.exports = (app, pool) => {
   const asyncQuery = promisify(pool.query).bind(pool);
+  const areaCode = [
+    1, 2, 4, 6, 8, 10, 11, 12, 14, 15, 17, 19, 20, 22, 24, 25, 26, 27, 30, 31,
+    33, 34, 35, 36, 37, 38, 40, 42, 44, 45, 46, 48, 49, 51, 52, 54, 56, 58, 60,
+    62, 64, 66, 67, 68, 70, 72, 74, 75, 77, 79, 80, 82, 83, 84, 86, 87, 89, 91,
+    92, 93, 94, 95, 96,
+  ];
+  const areaCodeStr = areaCode.map((code) => String(code).padStart(3, "0"));
 
   app.post("/auth/login", (req, res) => {
     const { number, password } = req.body;
@@ -74,32 +81,77 @@ module.exports = (app, pool) => {
   });
 
   app.post("/auth/register", async (req, res) => {
-    const {
-      officialId,
-      fullName,
-      phoneNumber,
-      password,
-      address,
-      name,
-      spaceCount,
-      defaultFee,
-    } = req.body;
+    const validateInput = (body) => {
+      const { officialId, fullName, phoneNumber, password, address, name } =
+        body;
 
-    if (
-      officialId == "" ||
-      fullName == "" ||
-      phoneNumber == "" ||
-      password == "" ||
-      address == "" ||
-      name == ""
-    ) {
-      res.status(400).json({
-        message: "Inputs cannot be blank!",
-      });
-      return;
-    }
+      if (
+        officialId == "" ||
+        officialId == undefined ||
+        fullName == "" ||
+        fullName == undefined ||
+        phoneNumber == "" ||
+        phoneNumber == undefined ||
+        password == "" ||
+        password == undefined ||
+        address == "" ||
+        address == undefined ||
+        name == "" ||
+        name == undefined
+      ) {
+        throw new Error("Please fill in the required fields.");
+      }
+    };
+
+    const validateOfficialId = (id) => {
+      const invalidStr = "Invalid ID number.";
+
+      if (id.length != 12 && id.length != 9) {
+        throw new Error(invalidStr);
+      }
+      const digits = id.split("").map((char) => parseInt(char));
+      const isContainInvalidChar = digits.includes(NaN);
+
+      if (isContainInvalidChar) {
+        throw new Error(invalidStr);
+      }
+
+      if (digits.length == 12) {
+        // check first 3 number
+        const head = id.substring(0, 3);
+        if (!areaCodeStr.includes(head)) {
+          throw new Error(invalidStr);
+        }
+
+        // check 4th
+        if (digits[3] >= 4) {
+          throw new Error(invalidStr);
+        }
+      }
+    };
+
+    const validatePhoneNumber = (num) => {};
+
+    const validatePassword = (pass) => {};
 
     try {
+      validateInput(req.body);
+
+      const {
+        officialId,
+        fullName,
+        phoneNumber,
+        password,
+        address,
+        name,
+        spaceCount,
+        defaultFee,
+      } = req.body;
+
+      validateOfficialId(officialId);
+      validatePhoneNumber(phoneNumber);
+      validatePassword(password);
+
       var query = `INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
                     VALUES('${officialId}', '${fullName}', '${phoneNumber}', '${password}')`;
       var data = await asyncQuery(query);
@@ -129,7 +181,7 @@ module.exports = (app, pool) => {
       });
     } catch (err) {
       res.status(400).json({
-        message: err,
+        message: err.message,
       });
     }
   });
