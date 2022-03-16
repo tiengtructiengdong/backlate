@@ -24,8 +24,8 @@ module.exports = (app, pool) => {
       );
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.Address, ParkingLot.Name, ParkingLot.SpaceCount
-        FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = parkingLot?.Id
+        SELECT ParkingLot.Id, ParkingLot.Address, ParkingLot.Name, ParkingLot.SpaceCount
+        FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
         WHERE Partnership.PartnerId = ${ownerId}
       `;
       userData = await asyncQuery(query);
@@ -90,15 +90,15 @@ module.exports = (app, pool) => {
     try {
       var query = `
         SELECT 
-          parkingLot?.Id, 
+          ParkingLot.Id, 
           ParkingLot.OwnerId, 
           ParkingLot.Address, 
           ParkingLot.Name, 
           ParkingLot.SpaceCount
-        FROM ParkingLot LEFT JOIN Partnership ON Partnership.ParkingLotId = parkingLot?.Id
+        FROM ParkingLot LEFT JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
         WHERE 
           (ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId})
-          AND parkingLot?.Id = ${id}
+          AND ParkingLot.Id = ${id}
       `;
       var response = await asyncQuery(query);
 

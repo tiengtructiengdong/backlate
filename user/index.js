@@ -33,8 +33,8 @@ module.exports = (app, pool) => {
       };
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.Name, ParkingLot.Address, ParkingLot.SpaceCount
-        FROM Partnership INNER JOIN ParkingLot ON Partnership.ParkingLotId = parkingLot?.Id
+        SELECT ParkingLot.Id, ParkingLot.Name, ParkingLot.Address, ParkingLot.SpaceCount
+        FROM Partnership INNER JOIN ParkingLot ON Partnership.ParkingLotId = ParkingLot.Id
         WHERE Partnership.PartnerId = ${id}
       `;
       data = await asyncQuery(query);

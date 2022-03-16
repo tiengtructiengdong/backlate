@@ -36,9 +36,9 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
       data = await asyncQuery(query);
@@ -97,9 +97,9 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))
       `;
@@ -175,9 +175,9 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))
       `;
@@ -242,9 +242,9 @@ module.exports = (app, pool) => {
       }
 
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
       data = await asyncQuery(query);
@@ -291,9 +291,9 @@ module.exports = (app, pool) => {
 
       try {
         query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
         data = await asyncQuery(query);
@@ -310,7 +310,7 @@ module.exports = (app, pool) => {
           JOIN ParkingLot ON Membership.ParkingLotId = ParkingLotId
         WHERE 
           Customer.PlateId = ${plateId} 
-          AND parkingLot?.Id = ${parkingLotId}
+          AND ParkingLot.Id = ${parkingLotId}
       `;
         data = await asyncQuery(query);
 
@@ -385,9 +385,9 @@ module.exports = (app, pool) => {
 
     try {
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
       data = await asyncQuery(query);
@@ -459,9 +459,9 @@ module.exports = (app, pool) => {
 
     try {
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
       data = await asyncQuery(query);
@@ -502,9 +502,9 @@ module.exports = (app, pool) => {
 
     try {
       query = `
-        SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-        FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-        WHERE (parkingLot?.Id = ${parkingLotId} AND (
+        SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+        FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+        WHERE (ParkingLot.Id = ${parkingLotId} AND (
           ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
         ))`;
       data = await asyncQuery(query);
@@ -563,9 +563,9 @@ module.exports = (app, pool) => {
         }
 
         query = `
-          SELECT parkingLot?.Id, ParkingLot.OwnerId, Partnership.PartnerId
-          FROM ParkingLot LEFT JOIN Partnership ON parkingLot?.Id=Partnership.ParkingLotId
-          WHERE (parkingLot?.Id = ${parkingLotId} AND (
+          SELECT ParkingLot.Id, ParkingLot.OwnerId, Partnership.PartnerId
+          FROM ParkingLot LEFT JOIN Partnership ON ParkingLot.Id=Partnership.ParkingLotId
+          WHERE (ParkingLot.Id = ${parkingLotId} AND (
             ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId}
           ))`;
         data = await asyncQuery(query);
