@@ -1,5 +1,6 @@
 var jwt = require("jsonwebtoken");
 const { promisify } = require("util");
+const { nanoid } = require("nanoid");
 
 module.exports = (app, pool) => {
   const asyncQuery = promisify(pool.query).bind(pool);
@@ -11,55 +12,53 @@ module.exports = (app, pool) => {
   ];
   const areaCodeStr = areaCode.map((code) => String(code).padStart(3, "0"));
 
-  app.post("/auth/login", (req, res) => {
+  app.post("/auth/login", async (req, res) => {
     const { number, password } = req.body;
 
-    const query = `SELECT * FROM User WHERE (PhoneNumber = '${number}' OR OfficialId = '${number}') AND Password = '${password}'`;
-
-    pool.query(query, (err, userData) => {
-      if (err) {
-        res.status(500).json({
-          message: err.sqlMessage,
-        });
-        return;
+    try {
+      if (!number || !password) {
+        throw new Error("Please fill in the required fields.");
       }
-      if (number && password) {
-        if (userData.length >= 1) {
-          var json = JSON.parse(JSON.stringify(userData[0]));
-          console.log(json);
 
-          const token = jwt.sign({ foo: number }, password);
+      var query = `
+        SELECT Id, OfficialId, FullName, PhoneNumber, IsVerified
+        FROM User 
+        WHERE 
+          (PhoneNumber = '${number}' OR OfficialId = '${number}') 
+          AND
+            CONCAT(
+              SUBSTRING(Password, 1, 8), 
+              SHA(CONCAT(SUBSTRING(Password, 1, 8), SUBSTRING(Password, 49, 56), '${password}')), 
+              SUBSTRING(Password, 49, 56)
+            ) = Password
+        `;
+      var data = await asyncQuery(query);
 
-          const query = `UPDATE User SET UserToken = '${token}' 
-                          WHERE (PhoneNumber = '${number}' OR OfficialId = '${number}') AND Password = '${password}'`;
-          pool.query(query, (err, userData) => {
-            if (err) {
-              res.status(500).json({
-                message: err.sqlMessage,
-              });
-              return;
-            }
-            res.json({
-              id: json.Id,
-              officialId: json.OfficialId,
-              fullName: json.FullName,
-              phoneNumber: json.PhoneNumber,
-              token: token,
-            });
-          });
-          return;
-        }
-
-        // if user not found
-        res.status(401).json({
-          message: "Invalid username or password",
-        });
-        return;
+      if (data.length === 0) {
+        throw new Error("Invalid username or password");
       }
-      res.status(400).json({
-        message: "Missing input!",
+
+      var json = JSON.parse(JSON.stringify(data[0]));
+      console.log(json);
+
+      const token = jwt.sign({ foo: number }, password);
+
+      query = `UPDATE User SET UserToken = '${token}' 
+        WHERE (PhoneNumber = '${number}' OR OfficialId = '${number}')`;
+
+      data = await asyncQuery(query);
+      res.json({
+        id: json.Id,
+        officialId: json.OfficialId,
+        fullName: json.FullName,
+        phoneNumber: json.PhoneNumber,
+        token: token,
       });
-    });
+    } catch (err) {
+      res.status(400).json({
+        message: err.message,
+      });
+    }
   });
 
   app.post("/auth/logout", (req, res) => {
@@ -81,10 +80,18 @@ module.exports = (app, pool) => {
   });
 
   app.post("/auth/register", async (req, res) => {
-    const validateInput = (body) => {
-      const { officialId, fullName, phoneNumber, password, address, name } =
-        body;
+    const {
+      officialId,
+      fullName,
+      phoneNumber,
+      password,
+      address,
+      name,
+      spaceCount,
+      defaultFee,
+    } = req.body;
 
+    const validateInput = () => {
       if (
         officialId == "" ||
         officialId == undefined ||
@@ -96,6 +103,8 @@ module.exports = (app, pool) => {
         password == undefined ||
         address == "" ||
         address == undefined ||
+        defaultFee == "" ||
+        defaultFee == undefined ||
         name == "" ||
         name == undefined
       ) {
@@ -135,25 +144,27 @@ module.exports = (app, pool) => {
     const validatePassword = (pass) => {};
 
     try {
-      validateInput(req.body);
-
-      const {
-        officialId,
-        fullName,
-        phoneNumber,
-        password,
-        address,
-        name,
-        spaceCount,
-        defaultFee,
-      } = req.body;
+      validateInput();
 
       validateOfficialId(officialId);
       validatePhoneNumber(phoneNumber);
       validatePassword(password);
 
-      var query = `INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
-                    VALUES('${officialId}', '${fullName}', '${phoneNumber}', '${password}')`;
+      const boom_a = nanoid(8);
+      const boom_b = nanoid(8);
+
+      const database_pw = `${boom_a}${boom_b}${password}`;
+      console.log(database_pw);
+
+      var query = `
+        INSERT INTO User(OfficialId, FullName, PhoneNumber, Password) 
+        VALUES(
+          '${officialId}', 
+          '${fullName}', 
+          '${phoneNumber}', 
+          CONCAT('${boom_a}', SHA('${database_pw}'), '${boom_b}') 
+        )
+      `;
       var data = await asyncQuery(query);
 
       const ownerId = data.insertId;

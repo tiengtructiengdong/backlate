@@ -12,7 +12,7 @@ module.exports = async (pool) => {
       OfficialId varchar(12) UNIQUE NOT NULL,
       FullName varchar(255) NOT NULL,
       PhoneNumber varchar(255) UNIQUE NOT NULL,
-      Password varchar(255) NOT NULL,
+      Password CHAR(56) NOT NULL,
       UserToken varchar(255),
       IsVerified tinyint(1) DEFAULT 0,
 
