@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 createUnixSocketPool().then((pool) => {
-  //require("./db")(pool);
+  require("./db")(pool);
   require("./auth")(app, pool);
   require("./user")(app, pool);
   require("./partnership")(app, pool);

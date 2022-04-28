@@ -120,8 +120,7 @@ module.exports = async (pool) => {
     );
     await asyncQuery(
       `
-    CREATE VIEW IF NOT EXISTS
-    ActiveSession
+    CREATE VIEW ActiveSession
     AS SELECT * FROM Session WHERE CheckoutDateTime IS NULL
     `
     );
