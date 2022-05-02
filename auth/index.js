@@ -210,8 +210,15 @@ module.exports = (app, pool) => {
         phoneNumber: phoneNumber,
       });
     } catch (err) {
+      const sql_error = err.message?.split(":")[0] || "";
+      var message = err.message;
+
+      if (sql_error == "ER_DUP_ENTRY") {
+        message = "This ID number or phone number has been registered!";
+      }
+
       res.status(400).json({
-        message: err.message,
+        message,
       });
     }
   });
