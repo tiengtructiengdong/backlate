@@ -12,6 +12,21 @@ module.exports = (app, pool) => {
   ];
   const areaCodeStr = areaCode.map((code) => String(code).padStart(3, "0"));
 
+  const checkPassword = (password) => {
+    const strong =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/g;
+    const medium =
+      /((?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{6,}))|((?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])(?=.{8,}))/g;
+
+    if (strong.test(password)) {
+      return "Strong";
+    }
+    if (medium.test(password)) {
+      return "Medium";
+    }
+    return "Weak";
+  };
+
   app.post("/auth/login", async (req, res) => {
     const { number, password } = req.body;
 
@@ -141,7 +156,11 @@ module.exports = (app, pool) => {
 
     const validatePhoneNumber = (num) => {};
 
-    const validatePassword = (pass) => {};
+    const validatePassword = (pass) => {
+      if (checkPassword(pass) === "Weak") {
+        throw new Error("Your password must have at least 6 characters long.");
+      }
+    };
 
     try {
       validateInput();
@@ -195,6 +214,14 @@ module.exports = (app, pool) => {
         message: err.message,
       });
     }
+  });
+
+  app.post("/auth/checkPassword", async (req, res) => {
+    const { password } = req.body;
+
+    res.json({
+      strength: checkPassword(password),
+    });
   });
 
   app.post("/auth/verify", (req, res) => {
