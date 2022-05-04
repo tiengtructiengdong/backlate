@@ -3,7 +3,7 @@ const { promisify } = require("util");
 
 module.exports = (app, pool) => {
   app.post("/parkingLot/:id/addMembership", async (req, res) => {
-    const { name, fee, level } = req.body;
+    const { name, fee, level, setAtCheckinCount } = req.body;
     const parkingLotId = req.params.id;
     const userId = req.headers.id;
 
@@ -36,8 +36,10 @@ module.exports = (app, pool) => {
 
     //
     query = `
-      INSERT INTO Membership (ParkingLotId, Name, Fee, Level) 
-      VALUES (${parkingLotId}, '${name}', '${JSON.stringify(fee)}', ${level})
+      INSERT INTO Membership (ParkingLotId, Name, Fee, Level, SetAtCheckinCount) 
+      VALUES (${parkingLotId}, '${name}', '${JSON.stringify(fee)}', ${level}, ${
+      setAtCheckinCount || 0
+    })
     `;
     pool.query(query, (err, data) => {
       if (err) {

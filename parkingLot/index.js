@@ -129,6 +129,53 @@ module.exports = (app, pool) => {
     }
   });
 
+  app.post(`/parkingLot/:id/removeParkingLot`, async (req, res) => {
+    const { id } = req.params;
+    const { address, name, spaceCount, defaultFee } = req.body;
+    const userId = req.headers.id;
+
+    try {
+      await verifyRequest(req, pool);
+    } catch (err) {
+      res.status(403).json({ message: "Forbidden: Not logged in" });
+      return;
+    }
+
+    try {
+      var query = `
+        SELECT 
+          ParkingLot.Id, 
+          ParkingLot.OwnerId, 
+          ParkingLot.Address, 
+          ParkingLot.Name, 
+          ParkingLot.SpaceCount
+        FROM ParkingLot LEFT JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+        WHERE 
+          (ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId})
+          AND ParkingLot.Id = ${id}
+      `;
+      var response = await asyncQuery(query);
+
+      console.log("userId", userId, "parkingLotId", id, response);
+
+      if (response.length === 0) {
+        throw new Error("No records");
+      }
+
+      var parkingLot = JSON.parse(JSON.stringify(response[0]));
+
+      query = `
+        SELECT * FROM Membership WHERE ParkingLotId = ${id}
+      `;
+      response = await asyncQuery(query);
+
+      var membership = response.map((item) => JSON.parse(JSON.stringify(item)));
+      res.json({ parkingLot, membership });
+    } catch (err) {
+      res.status(400).json({ message: err });
+    }
+  });
+
   // cannot set headers?
   app.put(`/parkingLot/:id/update`, async (req, res) => {
     const { address, name, spaceCount } = req.body;
@@ -245,7 +292,7 @@ module.exports = (app, pool) => {
         m.Level,
         m.Fee
       FROM 
-        ActiveSession AS s
+        Session AS s
         JOIN Customer AS c ON s.CustomerId = c.Id
         JOIN Membership AS m ON c.MembershipId = m.Id
       WHERE 

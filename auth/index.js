@@ -97,6 +97,7 @@ module.exports = (app, pool) => {
   app.post("/auth/register", async (req, res) => {
     const {
       officialId,
+      idDate,
       fullName,
       phoneNumber,
       password,
