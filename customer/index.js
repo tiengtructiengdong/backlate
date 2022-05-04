@@ -196,6 +196,7 @@ module.exports = (app, pool) => {
       data = JSON.parse(JSON.stringify(customerRaw[0]));
       customerId = data.Id;
 
+      // insert into session
       query = `
         INSERT INTO Session(ParkingLotId, CustomerId, PlateId, Code, CheckinDateTime) 
         VALUES(${parkingLotId}, ${customerId}, '${plateId}', '${code}', CURRENT_TIMESTAMP())
@@ -206,6 +207,37 @@ module.exports = (app, pool) => {
         throw new Error("Error checking in");
       }
 
+      // get checkin count
+      query = `
+        SELECT COUNT(Id) AS num FROM Session
+        WHERE CustomerId = '${customerId}
+        GROUP BY ParkingLotId
+      `;
+      data = await asyncQuery(query);
+      const checkinCount = JSON.parse(JSON.stringify(data[0])).num;
+
+      // search for membership
+      query = `
+        SELECT Id FROM Membership 
+        WHERE ParkingLotId = ${id} AND SetAtCheckinCount <= ${checkinCount} AND SetAtCheckinCount <> 0
+        ORDER BY SetAtCheckinCount
+        LIMIT 1
+      `;
+      data = await asyncQuery(query);
+
+      // upgrade membership, if there is one
+      if (data.length >= 1) {
+        const membershipId = JSON.parse(JSON.stringify(data[0])).Id;
+        query = `
+          UPDATE Customer SET MembershipId = ${membershipId}
+          WHERE 
+            PlateId = '${plateId}' 
+            AND ParkingLotId = ${parkingLotId}
+        `;
+        data = await asyncQuery(query);
+      }
+
+      // return
       res.json({ message: "Successful" });
     } catch (err) {
       res.status(400).json({ message: err });

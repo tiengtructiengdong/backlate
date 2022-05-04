@@ -2,6 +2,8 @@ const verifyRequest = require("../auth/verifyRequest");
 const { promisify } = require("util");
 
 module.exports = (app, pool) => {
+  const asyncQuery = promisify(pool.query).bind(pool);
+
   app.post("/parkingLot/:id/addMembership", async (req, res) => {
     const { name, fee, level, setAtCheckinCount } = req.body;
     const parkingLotId = req.params.id;
@@ -18,7 +20,6 @@ module.exports = (app, pool) => {
       SELECT Id FROM ParkingLot
       WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
     `;
-    const asyncQuery = promisify(pool.query).bind(pool);
 
     try {
       const exe = await asyncQuery(query);
@@ -72,7 +73,6 @@ module.exports = (app, pool) => {
       SELECT Id FROM ParkingLot
       WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
     `;
-    const asyncQuery = promisify(pool.query).bind(pool);
 
     try {
       const exe = await asyncQuery(query);
@@ -106,7 +106,7 @@ module.exports = (app, pool) => {
   app.put(
     "/parkingLot/:id/membership/:membershipId/updateMembership",
     async (req, res) => {
-      const { name, fee, level } = req.body;
+      const { name, fee, level, setAtCheckinCount } = req.body;
       const { membershipId } = req.params;
       const parkingLotId = req.params.id;
       const userId = req.headers.id;
@@ -118,42 +118,59 @@ module.exports = (app, pool) => {
         return;
       }
 
-      var query = `
-        SELECT Id FROM ParkingLot
-        WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
-      `;
-      const asyncQuery = promisify(pool.query).bind(pool);
-
       try {
-        const exe = await asyncQuery(query);
-        if (exe.length === 0) {
+        var query = `
+          SELECT Id FROM ParkingLot
+          WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
+        `;
+        var data = await asyncQuery(query);
+        if (data.length === 0) {
           res.status(403).json({
             message:
               "Forbidden: You do not have permission with this parking lot.",
           });
           return;
         }
-      } catch (err) {
-        res.status(400).json({ message: "Error", err });
-        return;
-      }
 
-      query = `
-        UPDATE Membership
-        SET 
-          ${
-            fee
-              ? `Fee = '${JSON.stringify(fee)}' ${name || level ? "," : ""}`
-              : ""
-          } 
-          ${name ? `Name = '${name}' ${level ? "," : ""}` : ""} 
-          ${level ? `Level = '${level}'` : ""}
-        WHERE (ParkingLotId = ${parkingLotId} AND Id = ${membershipId})
-      `;
+        if (setAtCheckinCount > 0) {
+          query = `
+            SELECT Id FROM Membership
+            WHERE ParkingLotId = ${parkingLotId} AND SetAtCheckinCount = ${setAtCheckinCount}
+          `;
+          data = await asyncQuery(query);
+          if (data.length > 1) {
+            throw new Error("Please input a different checkin count.");
+          }
+        }
 
-      try {
-        const exe = await asyncQuery(query);
-        if (exe.affectedRows > 0) {
+        query = `
+          UPDATE Membership
+          SET 
+            ${
+              fee
+                ? `Fee = '${JSON.stringify(fee)}' ${
+                    name || level || setAtCheckinCount ? "," : ""
+                  }`
+                : ""
+            } 
+            ${
+              name
+                ? `Name = '${name}' ${level || setAtCheckinCount ? "," : ""}`
+                : ""
+            } 
+            ${
+              level ? `Level = '${level}' ${setAtCheckinCount ? "," : ""}` : ""
+            } 
+            ${
+              setAtCheckinCount
+                ? `SetAtCheckinCount = '${setAtCheckinCount}'`
+                : ""
+            } 
+          WHERE (ParkingLotId = ${parkingLotId} AND Id = ${membershipId})
+        `;
+
+        data = await asyncQuery(query);
+        if (data.affectedRows > 0) {
           res.json({
             message: "Successful",
           });
@@ -162,10 +179,8 @@ module.exports = (app, pool) => {
             message: "Not found",
           });
         }
-        return;
       } catch (err) {
         res.status(400).json({ message: "Error", err });
-        return;
       }
     }
   );
