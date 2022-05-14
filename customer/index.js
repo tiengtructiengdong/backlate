@@ -210,7 +210,7 @@ module.exports = (app, pool) => {
       // get checkin count
       query = `
         SELECT COUNT(Id) AS num FROM Session
-        WHERE CustomerId = '${customerId}
+        WHERE CustomerId = ${customerId}
         GROUP BY ParkingLotId
       `;
       data = await asyncQuery(query);
