@@ -2,6 +2,7 @@ const verifyRequest = require("../auth/verifyRequest");
 const { promisify } = require("util");
 
 module.exports = (app, pool) => {
+  const asyncQuery = promisify(pool.query).bind(pool);
   app.post("/parkingLot/:id/addMembership", async (req, res) => {
     const { name, fee, level } = req.body;
     const parkingLotId = req.params.id;
@@ -18,7 +19,6 @@ module.exports = (app, pool) => {
       SELECT Id FROM ParkingLot
       WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
     `;
-    const asyncQuery = promisify(pool.query).bind(pool);
 
     try {
       const exe = await asyncQuery(query);
@@ -58,6 +58,7 @@ module.exports = (app, pool) => {
     const { membershipId } = req.body;
     const parkingLotId = req.params.id;
     const userId = req.headers.id;
+    var query;
 
     try {
       await verifyRequest(req, pool);
@@ -66,39 +67,35 @@ module.exports = (app, pool) => {
       return;
     }
 
-    var query = `
-      SELECT Id FROM ParkingLot
-      WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
-    `;
-    const asyncQuery = promisify(pool.query).bind(pool);
-
     try {
-      const exe = await asyncQuery(query);
-      if (exe.length === 0) {
+      query = `SELECT Id FROM ParkingLot WHERE Id = ${parkingLotId} AND OwnerId = ${userId} `;
+      data = await asyncQuery(query);
+
+      if (data.length === 0) {
         res.status(403).json({
           message:
             "Forbidden: You do not have permission with this parking lot.",
         });
         return;
       }
+
+      query = `SELECT * FROM Membership WHERE ParkingLotId = ${parkingLotId} AND Name = 'Default'`;
+      var data = await asyncQuery(query);
+      const defMembershipId = JSON.parse(JSON.stringify(data[0])).Id;
+
+      query = `UPDATE Customer SET MembershipId = ${defMembershipId} WHERE MembershipId = ${membershipId}`;
+      await asyncQuery(query);
+
+      query = `DELETE FROM Membership WHERE Id = ${membershipId}`;
+      await asyncQuery(query);
+
+      res.json({
+        message: "Successful",
+      });
     } catch (err) {
       res.status(400).json({ message: "Error" });
       return;
     }
-
-    //
-    query = `
-      DELETE FROM Membership WHERE Id = ${membershipId}
-    `;
-    pool.query(query, (err, data) => {
-      if (err) {
-        res.status(400).json({ message: err });
-        return;
-      }
-      res.json({
-        message: "Successful",
-      });
-    });
   });
 
   app.put(
@@ -120,7 +117,6 @@ module.exports = (app, pool) => {
         SELECT Id FROM ParkingLot
         WHERE Id = ${parkingLotId} AND OwnerId = ${userId} 
       `;
-      const asyncQuery = promisify(pool.query).bind(pool);
 
       try {
         const exe = await asyncQuery(query);
