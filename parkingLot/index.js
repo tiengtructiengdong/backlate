@@ -28,12 +28,16 @@ module.exports = (app, pool) => {
       );
 
       query = `
-        SELECT ParkingLot.Id, ParkingLot.Address, ParkingLot.Name, ParkingLot.SpaceCount
+        SELECT 
+          ParkingLot.Id, 
+          ParkingLot.Address, 
+          ParkingLot.Name, 
+          ParkingLot.SpaceCount,
+          COUNT(ActiveSession.Id) AS Count
         FROM ParkingLot JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
-        LEFT JOIN 
-          (SELECT ParkingLotId, COUNT(Id) AS Count FROM ActiveSession GROUP BY ParkingLotId) S1
-          ON S1.ParkingLotId = ParkingLot.Id
+        LEFT JOIN ActiveSession ON ActiveSession.ParkingLotId = ParkingLot.Id
         WHERE Partnership.PartnerId = ${ownerId}
+        GROUP BY ParkingLot.Id
       `;
       userData = await asyncQuery(query);
       const workingParkingLot = userData.map((data) =>
