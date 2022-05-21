@@ -101,11 +101,16 @@ module.exports = (app, pool) => {
           ParkingLot.OwnerId, 
           ParkingLot.Address, 
           ParkingLot.Name, 
-          ParkingLot.SpaceCount
-        FROM ParkingLot LEFT JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+          ParkingLot.SpaceCount,
+          COUNT(ActiveSession.Id) AS VehicleCount
+        FROM 
+          ParkingLot 
+          LEFT JOIN Partnership ON Partnership.ParkingLotId = ParkingLot.Id
+          LEFT JOIN ActiveSession ON ActiveSession.ParkingLotId = ParkingLot.Id
         WHERE 
           (ParkingLot.OwnerId = ${userId} OR Partnership.PartnerId = ${userId})
           AND ParkingLot.Id = ${id}
+        GROUP BY ParkingLot.Id
       `;
       var response = await asyncQuery(query);
 

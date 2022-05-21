@@ -13,9 +13,9 @@ const createUnixSocketPool = async () => {
     const con = mysql.createPool({
       connectionLimit: 5,
       user: "root",
-      password: "Bcpjm3J96Kstbht4",
+      password: `u>R#<aqngS+ZJSBh`,
       database: "applate",
-      socketPath: `${dbSocketPath}/backlate-343800:asia-east2:backlate`,
+      socketPath: `${dbSocketPath}/academic-empire-330510:asia-east2:backlate-server`,
 
       connectTimeout: 10000,
       acquireTimeout: 10000,
@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 createUnixSocketPool().then((pool) => {
-  require("./db")(pool);
+  //require("./db")(pool);
   require("./auth")(app, pool);
   require("./user")(app, pool);
   require("./partnership")(app, pool);

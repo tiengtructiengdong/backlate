@@ -167,7 +167,7 @@ module.exports = (app, pool) => {
 
       validateOfficialId(officialId);
       validatePhoneNumber(phoneNumber);
-      validatePassword(password);
+      //validatePassword(password);
 
       const boom_a = nanoid(8);
       const boom_b = nanoid(8);
@@ -210,7 +210,7 @@ module.exports = (app, pool) => {
         phoneNumber: phoneNumber,
       });
     } catch (err) {
-      const sql_error = err.message?.split(":")[0] || "";
+      const sql_error = `${err.message}`.split(":")[0] || "";
       var message = err.message;
 
       if (sql_error == "ER_DUP_ENTRY") {
